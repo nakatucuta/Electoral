@@ -68,7 +68,6 @@
                         name="numero_identificacion"
                         type="text"
                         class="mt-1 block w-full"
-                        :value="old('numero_identificacion', $votante->numero_identificacion ?? '')"
                         x-model="numeroIdentificacion"
                         x-on:input.debounce.500ms="validarNumero()"
                         required
@@ -105,7 +104,7 @@
                 <div class="relative" x-on:click.outside="closeSuggestions('departamento')">
                     <x-label for="departamento" value="Departamento" />
                     <div class="relative mt-1">
-                        <x-input id="departamento" name="departamento" type="text" class="block w-full pr-10" value="{{ old('departamento', $votante->departamento ?? '') }}" x-on:focus="abrirCatalogo('departamento')" x-on:click="abrirCatalogo('departamento')" x-on:input.debounce.300ms="departamento = $event.target.value; buscarCatalogo('departamento')" autocomplete="off" required />
+                        <x-input id="departamento" name="departamento" type="text" class="block w-full pr-10" x-model="departamento" x-on:focus="abrirCatalogo('departamento')" x-on:click="abrirCatalogo('departamento')" x-on:input.debounce.300ms="buscarCatalogo('departamento')" autocomplete="off" required />
                         <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400">
                             <svg viewBox="0 0 20 20" fill="none" class="h-4 w-4" aria-hidden="true">
                                 <path d="M6 8l4 4 4-4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
@@ -129,7 +128,7 @@
                 <div class="relative" x-on:click.outside="closeSuggestions('municipio')">
                     <x-label for="municipio" value="Municipio" />
                     <div class="relative mt-1">
-                        <x-input id="municipio" name="municipio" type="text" class="block w-full pr-10" value="{{ old('municipio', $votante->municipio ?? '') }}" x-on:focus="abrirCatalogo('municipio')" x-on:click="abrirCatalogo('municipio')" x-on:input.debounce.300ms="municipio = $event.target.value; buscarCatalogo('municipio')" autocomplete="off" required />
+                        <x-input id="municipio" name="municipio" type="text" class="block w-full pr-10" x-model="municipio" x-on:focus="abrirCatalogo('municipio')" x-on:click="abrirCatalogo('municipio')" x-on:input.debounce.300ms="buscarCatalogo('municipio')" autocomplete="off" required />
                         <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400">
                             <svg viewBox="0 0 20 20" fill="none" class="h-4 w-4" aria-hidden="true">
                                 <path d="M6 8l4 4 4-4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
@@ -153,7 +152,7 @@
                 <div class="relative" x-on:click.outside="closeSuggestions('puesto_votacion')">
                     <x-label for="puesto_votacion" value="Puesto de votación" />
                     <div class="relative mt-1">
-                        <x-input id="puesto_votacion" name="puesto_votacion" type="text" class="block w-full pr-10" value="{{ old('puesto_votacion', $votante->puesto_votacion ?? '') }}" x-on:focus="abrirCatalogo('puesto_votacion')" x-on:click="abrirCatalogo('puesto_votacion')" x-on:input.debounce.300ms="puesto_votacion = $event.target.value; buscarCatalogo('puesto_votacion')" autocomplete="off" required />
+                        <x-input id="puesto_votacion" name="puesto_votacion" type="text" class="block w-full pr-10" x-model="puesto_votacion" x-on:focus="abrirCatalogo('puesto_votacion')" x-on:click="abrirCatalogo('puesto_votacion')" x-on:input.debounce.300ms="buscarCatalogo('puesto_votacion')" autocomplete="off" required />
                         <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400">
                             <svg viewBox="0 0 20 20" fill="none" class="h-4 w-4" aria-hidden="true">
                                 <path d="M6 8l4 4 4-4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
@@ -177,7 +176,7 @@
                 <div class="relative" x-on:click.outside="closeSuggestions('comuna')">
                     <x-label for="comuna" value="Comuna" />
                     <div class="relative mt-1">
-                        <x-input id="comuna" name="comuna" type="text" class="block w-full pr-10" value="{{ old('comuna', $votante->comuna ?? '') }}" x-on:focus="abrirCatalogo('comuna')" x-on:click="abrirCatalogo('comuna')" x-on:input.debounce.300ms="comuna = $event.target.value; buscarCatalogo('comuna')" autocomplete="off" required />
+                        <x-input id="comuna" name="comuna" type="text" class="block w-full pr-10" x-model="comuna" x-on:focus="abrirCatalogo('comuna')" x-on:click="abrirCatalogo('comuna')" x-on:input.debounce.300ms="buscarCatalogo('comuna')" autocomplete="off" required />
                         <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400">
                             <svg viewBox="0 0 20 20" fill="none" class="h-4 w-4" aria-hidden="true">
                                 <path d="M6 8l4 4 4-4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
@@ -201,7 +200,7 @@
                 <div class="relative md:col-span-2" x-on:click.outside="closeSuggestions('direccion')">
                     <x-label for="direccion" value="Dirección" />
                     <div class="relative mt-1">
-                        <x-input id="direccion" name="direccion" type="text" class="block w-full pr-10" value="{{ old('direccion', $votante->direccion ?? '') }}" x-on:focus="abrirCatalogo('direccion')" x-on:click="abrirCatalogo('direccion')" x-on:input.debounce.300ms="direccion = $event.target.value; buscarCatalogo('direccion')" autocomplete="off" required />
+                        <x-input id="direccion" name="direccion" type="text" class="block w-full pr-10" x-model="direccion" x-on:focus="abrirCatalogo('direccion')" x-on:click="abrirCatalogo('direccion')" x-on:input.debounce.300ms="buscarCatalogo('direccion')" autocomplete="off" required />
                         <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400">
                             <svg viewBox="0 0 20 20" fill="none" class="h-4 w-4" aria-hidden="true">
                                 <path d="M6 8l4 4 4-4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />

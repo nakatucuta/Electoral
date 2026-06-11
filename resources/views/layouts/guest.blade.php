@@ -16,6 +16,16 @@
         <!-- Scripts -->
         @if (file_exists(public_path('build/manifest.json')) || file_exists(public_path('hot')))
             @vite(['resources/css/app.css', 'resources/js/app.js'])
+        @else
+            <script>
+                window.tailwind = window.tailwind || {};
+                window.tailwind.config = {
+                    theme: {
+                        extend: {},
+                    },
+                };
+            </script>
+            <script src="https://cdn.tailwindcss.com"></script>
         @endif
 
         <!-- Styles -->

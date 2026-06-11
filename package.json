@@ -18,7 +18,9 @@
         "vite": "^8.0.0"
     },
     "dependencies": {
+        "@vitejs/plugin-vue": "^6.0.7",
         "alpinejs": "^3.15.12",
-        "chart.js": "^4.5.1"
+        "chart.js": "^4.5.1",
+        "vue": "^3.5.38"
     }
 }

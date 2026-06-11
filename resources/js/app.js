@@ -1,5 +1,7 @@
 ﻿import Alpine from 'alpinejs';
 import Chart from 'chart.js/auto';
+import { createApp } from 'vue';
+import LoginExperience from './components/LoginExperience.vue';
 
 window.Alpine = Alpine;
 
@@ -336,6 +338,20 @@ Alpine.data('dashboardStats', (config) => ({
         }
     },
 }));
+const loginApp = document.getElementById('login-app');
+
+if (loginApp) {
+    const props = JSON.parse(loginApp.dataset.props ?? '{}');
+    const fallback = document.getElementById('login-fallback');
+
+    if (fallback) {
+        fallback.classList.add('hidden');
+    }
+
+    loginApp.classList.remove('hidden');
+    createApp(LoginExperience, props).mount(loginApp);
+}
+
 Alpine.start();
 
 

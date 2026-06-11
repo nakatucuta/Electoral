@@ -62,6 +62,7 @@ Alpine.data('votanteForm', (config) => ({
     numeroExiste: false,
     numeroMensaje: '',
     numeroChequeando: false,
+    numeroValidacionTimer: null,
     suggestions: {
         departamento: [],
         municipio: [],
@@ -122,6 +123,15 @@ Alpine.data('votanteForm', (config) => ({
         } finally {
             this.numeroChequeando = false;
         }
+    },
+    programarValidacionNumero() {
+        if (this.numeroValidacionTimer) {
+            clearTimeout(this.numeroValidacionTimer);
+        }
+
+        this.numeroValidacionTimer = setTimeout(() => {
+            void this.validarNumero();
+        }, 350);
     },
     async buscarCatalogo(field, forceOpen = false) {
         this.activeField = field;
@@ -198,6 +208,10 @@ Alpine.data('votanteForm', (config) => ({
         this.suggestionsLoading[field] = false;
     },
     init() {
+        this.$watch('numeroIdentificacion', () => {
+            this.programarValidacionNumero();
+        });
+
         if (this.numeroIdentificacion) {
             this.validarNumero();
         }

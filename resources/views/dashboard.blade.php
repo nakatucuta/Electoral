@@ -10,7 +10,7 @@
 
             <div class="flex flex-wrap items-center gap-3">
                 @if (auth()->user()->isAdmin())
-                    <div x-data="{ open: false }" class="relative">
+                    <div x-data="novedadesPanel({ baseUrl: @js(url('responsables')) })" class="relative">
                         <button
                             type="button"
                             @click="open = true"
@@ -21,9 +21,9 @@
                                 <path d="M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" stroke-linecap="round" stroke-linejoin="round"></path>
                             </svg>
                             <span class="tracking-normal">Novedades</span>
-                            @if ($employeeNotifications->count() > 0)
+                            @if ($pendingNotificationsTotal > 0)
                                 <span class="inline-flex items-center rounded-full bg-white px-2.5 py-0.5 text-xs font-bold text-indigo-700">
-                                    {{ $employeeNotifications->count() }}
+                                    {{ $pendingNotificationsTotal }}
                                 </span>
                             @endif
                         </button>
@@ -50,10 +50,10 @@
                                         <div>
                                             <p class="text-sm font-medium text-indigo-600 dark:text-indigo-400">Seguimiento</p>
                                             <h3 id="novedades-title" class="mt-1 text-xl font-semibold text-gray-900 dark:text-gray-100">
-                                                Novedades de empleados
+                                                Certificados pendientes por responsable
                                             </h3>
                                             <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                                                Empleados sin votantes cargados y resumen de actividad.
+                                                Aquí ves quién tiene registros pendientes porque aún no ha cargado la foto del certificado.
                                             </p>
                                         </div>
 
@@ -70,45 +70,172 @@
 
                                     <div class="grid gap-6 p-6 lg:grid-cols-[320px_minmax(0,1fr)]">
                                         <div class="rounded-2xl border border-amber-200 bg-amber-50 p-5 dark:border-amber-900/40 dark:bg-amber-950/30">
-                                            <p class="text-sm font-semibold text-amber-900 dark:text-amber-100">Pendientes</p>
-                                            <p class="mt-2 text-4xl font-bold text-amber-950 dark:text-amber-50">{{ $employeeNotifications->count() }}</p>
+                                            <p class="text-sm font-semibold text-amber-900 dark:text-amber-100">Certificados pendientes</p>
+                                            <p class="mt-2 text-4xl font-bold text-amber-950 dark:text-amber-50">{{ $pendingNotificationsTotal }}</p>
                                             <p class="mt-2 text-sm text-amber-800 dark:text-amber-200">
-                                                Usuarios empleados que todavia no han cargado votantes.
+                                                Total de votantes sin foto del certificado, agrupados por responsable.
                                             </p>
 
                                             <div class="mt-5 space-y-3 max-h-[360px] overflow-y-auto pr-1">
                                                 @forelse ($employeeNotifications as $employee)
-                                                    <div class="rounded-xl border border-amber-200 bg-white p-4 shadow-sm dark:border-amber-900/40 dark:bg-slate-900">
-                                                        <p class="font-semibold text-gray-900 dark:text-gray-100">{{ $employee->name }}</p>
-                                                        <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">{{ $employee->email }}</p>
-                                                        <span class="mt-3 inline-flex rounded-full bg-red-100 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-red-700 dark:bg-red-500/10 dark:text-red-300">
-                                                            Sin votantes cargados
-                                                        </span>
-                                                    </div>
+                                                    <button
+                                                        type="button"
+                                                        class="w-full rounded-xl border border-amber-200 bg-white p-4 text-left shadow-sm transition hover:border-amber-300 hover:bg-amber-50/70 dark:border-amber-900/40 dark:bg-slate-900 dark:hover:bg-amber-950/20"
+                                                        @click="openDetalle({ id: {{ $employee->id }}, name: @js($employee->name), email: @js($employee->email), sede: @js($employee->sede), role: @js($employee->role), pendientes: {{ $employee->votantes_pendientes_count }}, confirmados: {{ $employee->votantes_confirmados_count }} })"
+                                                    >
+                                                        <div class="flex items-start justify-between gap-3">
+                                                            <div>
+                                                                <p class="font-semibold text-gray-900 dark:text-gray-100">{{ $employee->name }}</p>
+                                                                <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">{{ $employee->email }}</p>
+                                                            </div>
+
+                                                            <svg class="mt-1 h-5 w-5 shrink-0 text-amber-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                                <path d="m9 6 6 6-6 6" stroke-linecap="round" stroke-linejoin="round"></path>
+                                                            </svg>
+                                                        </div>
+
+                                                        <div class="mt-3 flex flex-wrap gap-2">
+                                                            <span class="inline-flex rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-amber-700 dark:bg-amber-500/10 dark:text-amber-200">
+                                                                {{ $employee->votantes_pendientes_count }} pendientes
+                                                            </span>
+                                                            <span class="inline-flex rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-slate-700 dark:bg-slate-700 dark:text-slate-200">
+                                                                {{ $employee->votantes_confirmados_count }} confirmados
+                                                            </span>
+                                                        </div>
+
+                                                        <p class="mt-3 text-xs font-medium uppercase tracking-wide text-amber-700 dark:text-amber-300">
+                                                            Haz clic para ver el detalle completo
+                                                        </p>
+                                                    </button>
                                                 @empty
                                                     <div class="rounded-xl border border-dashed border-amber-300 bg-white p-4 text-sm text-amber-800 dark:border-amber-800 dark:bg-slate-900 dark:text-amber-200">
-                                                        No hay empleados pendientes de carga.
-                                                    </div>
+                                                No hay responsables con certificados pendientes.
+                                            </div>
                                                 @endforelse
                                             </div>
                                         </div>
 
                                         <div class="rounded-2xl border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800">
                                             <div class="border-b border-gray-200 px-5 py-4 dark:border-gray-700">
-                                                <h4 class="text-base font-semibold text-gray-900 dark:text-gray-100">Carga por empleado</h4>
+                                                <h4 class="text-base font-semibold text-gray-900 dark:text-gray-100">Carga por responsable</h4>
                                                 <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                                                    Cuantos votantes registra cada usuario empleado.
+                                                    Cuantos votantes registra cada usuario responsable.
                                                 </p>
+                                            </div>
+
+                                            <div class="border-b border-gray-200 px-5 py-4 dark:border-gray-700">
+                                                <template x-if="selected">
+                                                    <div class="rounded-2xl border border-indigo-200 bg-indigo-50 p-4 dark:border-indigo-900/40 dark:bg-indigo-950/20">
+                                                        <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                                                            <div>
+                                                                <p class="text-lg font-semibold text-gray-900 dark:text-gray-100" x-text="selected.name"></p>
+                                                                <p class="text-sm text-gray-600 dark:text-gray-300" x-text="selected.email"></p>
+                                                                <p class="text-xs text-gray-500 dark:text-gray-400" x-text="selected.sede ? ('Sede: ' + selected.sede) : 'Sin sede'"></p>
+                                                            </div>
+
+                                                            <div class="flex flex-wrap gap-2">
+                                                                <span class="inline-flex rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-amber-700 dark:bg-amber-500/10 dark:text-amber-200">
+                                                                    <span x-text="selected.pendientes ?? 0"></span> pendientes
+                                                                </span>
+                                                                <span class="inline-flex rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-slate-700 dark:bg-slate-700 dark:text-slate-200">
+                                                                    <span x-text="selected.confirmados ?? 0"></span> confirmados
+                                                                </span>
+                                                            </div>
+                                                        </div>
+
+                                                        <div class="mt-4">
+                                                            <template x-if="loading">
+                                                                <div class="rounded-xl border border-dashed border-indigo-200 bg-white p-4 text-sm text-gray-500 dark:border-indigo-900/40 dark:bg-slate-900 dark:text-gray-300">
+                                                                    Cargando pendientes...
+                                                                </div>
+                                                            </template>
+
+                                                            <template x-if="error">
+                                                                <div class="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700 dark:border-red-900/40 dark:bg-red-950/20 dark:text-red-200" x-text="error"></div>
+                                                            </template>
+
+                                                            <template x-if="!loading && !error">
+                                                                <div>
+                                                                    <div class="space-y-3 max-h-[360px] overflow-y-auto pr-1">
+                                                                        <template x-for="pendiente in detalle" :key="pendiente.id">
+                                                                            <div class="rounded-xl border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-900">
+                                                                                <div class="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                                                                                    <div>
+                                                                                        <p class="font-semibold text-gray-900 dark:text-gray-100" x-text="`${pendiente.nombres} ${pendiente.apellidos}`"></p>
+                                                                                        <p class="text-sm text-gray-500 dark:text-gray-400" x-text="`${pendiente.tipo_identificacion} - ${pendiente.numero_identificacion}`"></p>
+                                                                                    </div>
+                                                                                    <span class="inline-flex rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-amber-700 dark:bg-amber-500/10 dark:text-amber-200" x-text="pendiente.estado_registro_label"></span>
+                                                                                </div>
+
+                                                                                <div class="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                                                                                    <div>
+                                                                                        <p class="text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400">Teléfono</p>
+                                                                                        <p class="mt-1 text-sm text-gray-800 dark:text-gray-200" x-text="pendiente.telefono || 'Sin dato'"></p>
+                                                                                    </div>
+                                                                                    <div>
+                                                                                        <p class="text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400">Departamento / Municipio</p>
+                                                                                        <p class="mt-1 text-sm text-gray-800 dark:text-gray-200" x-text="`${pendiente.departamento || 'Sin dato'} / ${pendiente.municipio || 'Sin dato'}`"></p>
+                                                                                    </div>
+                                                                                    <div>
+                                                                                        <p class="text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400">Puesto</p>
+                                                                                        <p class="mt-1 text-sm text-gray-800 dark:text-gray-200" x-text="pendiente.puesto_votacion || 'Sin dato'"></p>
+                                                                                    </div>
+                                                                                    <div>
+                                                                                        <p class="text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400">Comuna</p>
+                                                                                        <p class="mt-1 text-sm text-gray-800 dark:text-gray-200" x-text="pendiente.comuna || 'Sin dato'"></p>
+                                                                                    </div>
+                                                                                    <div>
+                                                                                        <p class="text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400">Dirección</p>
+                                                                                        <p class="mt-1 text-sm text-gray-800 dark:text-gray-200" x-text="pendiente.direccion || 'Sin dato'"></p>
+                                                                                    </div>
+                                                                                    <div>
+                                                                                        <p class="text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400">Mesa</p>
+                                                                                        <p class="mt-1 text-sm text-gray-800 dark:text-gray-200" x-text="pendiente.mesa_votacion || 'Sin dato'"></p>
+                                                                                    </div>
+                                                                                    <div>
+                                                                                        <p class="text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400">Relación</p>
+                                                                                        <p class="mt-1 text-sm text-gray-800 dark:text-gray-200" x-text="pendiente.relacion || 'Sin dato'"></p>
+                                                                                    </div>
+                                                                                    <div>
+                                                                                        <p class="text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400">Registrado</p>
+                                                                                        <p class="mt-1 text-sm text-gray-800 dark:text-gray-200" x-text="pendiente.created_at || 'Sin dato'"></p>
+                                                                                    </div>
+                                                                                </div>
+                                                                            </div>
+                                                                        </template>
+                                                                    </div>
+
+                                                                    <div class="mt-4 flex items-center justify-between border-t border-gray-200 pt-4 dark:border-gray-700">
+                                                                        <button type="button" @click="prevPage()" :disabled="meta.current_page <= 1 || loading" class="inline-flex items-center rounded-md border border-gray-300 px-3 py-1.5 text-sm text-gray-700 transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800">
+                                                                            Anterior
+                                                                        </button>
+                                                                        <p class="text-sm text-gray-500 dark:text-gray-400" x-text="`Página ${meta.current_page} de ${meta.last_page}`"></p>
+                                                                        <button type="button" @click="nextPage()" :disabled="meta.current_page >= meta.last_page || loading" class="inline-flex items-center rounded-md border border-gray-300 px-3 py-1.5 text-sm text-gray-700 transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800">
+                                                                            Siguiente
+                                                                        </button>
+                                                                    </div>
+                                                                </div>
+                                                            </template>
+                                                        </div>
+                                                    </div>
+                                                </template>
+
+                                                <template x-if="!selected">
+                                                    <div class="rounded-xl border border-dashed border-gray-300 bg-gray-50 p-6 text-sm text-gray-500 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300">
+                                                        Selecciona un responsable para ver el listado de sus votantes pendientes.
+                                                    </div>
+                                                </template>
                                             </div>
 
                                             <div class="overflow-x-auto">
                                                 <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                                                     <thead class="bg-gray-50 dark:bg-gray-900/50">
                                                         <tr>
-                                                            <th class="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">Empleado</th>
+                                                            <th class="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">Responsable</th>
                                                             <th class="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">Sede</th>
                                                             <th class="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">Email</th>
-                                                            <th class="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">Votantes</th>
+                                                            <th class="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">Confirmados</th>
+                                                            <th class="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">Pendientes</th>
                                                             <th class="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">Estado</th>
                                                         </tr>
                                                     </thead>
@@ -116,15 +243,22 @@
                                                         @forelse ($employeeStats as $employee)
                                                             <tr>
                                                                 <td class="px-5 py-4">
-                                                                    <div class="font-medium text-gray-900 dark:text-gray-100">{{ $employee->name }}</div>
-                                                                    <div class="text-xs text-gray-500 dark:text-gray-400">Rol: empleado</div>
+                                                                    <button
+                                                                        type="button"
+                                                                        class="text-left font-medium text-gray-900 transition hover:text-indigo-600 dark:text-gray-100 dark:hover:text-indigo-300"
+                                                                        @click="openDetalle({ id: {{ $employee->id }}, name: @js($employee->name), email: @js($employee->email), sede: @js($employee->sede), role: @js($employee->role), pendientes: {{ $employee->votantes_pendientes_count }}, confirmados: {{ $employee->votantes_confirmados_count }} })"
+                                                                    >
+                                                                        {{ $employee->name }}
+                                                                    </button>
+                                                                    <div class="text-xs text-gray-500 dark:text-gray-400">Rol: {{ $employee->role }}</div>
                                                                 </td>
                                                                 <td class="whitespace-nowrap px-5 py-4 text-sm text-gray-700 dark:text-gray-300">{{ $employee->sede ?? 'Sin sede' }}</td>
                                                                 <td class="whitespace-nowrap px-5 py-4 text-sm text-gray-700 dark:text-gray-300">{{ $employee->email }}</td>
-                                                                <td class="whitespace-nowrap px-5 py-4 text-sm font-semibold text-gray-900 dark:text-gray-100">{{ number_format($employee->votantes_count) }}</td>
+                                                                <td class="whitespace-nowrap px-5 py-4 text-sm font-semibold text-gray-900 dark:text-gray-100">{{ number_format($employee->votantes_confirmados_count) }}</td>
+                                                                <td class="whitespace-nowrap px-5 py-4 text-sm font-semibold text-amber-700 dark:text-amber-300">{{ number_format($employee->votantes_pendientes_count) }}</td>
                                                                 <td class="whitespace-nowrap px-5 py-4">
-                                                                    <span class="inline-flex rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wide {{ $employee->votantes_count === 0 ? 'bg-red-100 text-red-700 dark:bg-red-500/10 dark:text-red-300' : 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300' }}">
-                                                                        {{ $employee->votantes_count === 0 ? 'Pendiente' : 'Activo' }}
+                                                                    <span class="inline-flex rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wide {{ $employee->votantes_pendientes_count > 0 ? 'bg-amber-100 text-amber-700 dark:bg-amber-500/10 dark:text-amber-200' : 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300' }}">
+                                                                        {{ $employee->votantes_pendientes_count > 0 ? 'Con pendientes' : 'Al día' }}
                                                                     </span>
                                                                 </td>
                                                             </tr>
@@ -164,14 +298,14 @@
         <div class="mx-auto max-w-7xl space-y-8 px-4 sm:px-6 lg:px-8">
             <div class="grid gap-4 md:grid-cols-3">
                 <div class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-gray-800">
-                    <p class="text-sm text-gray-500 dark:text-gray-400">{{ auth()->user()->isAdmin() ? 'Total de votantes' : 'Mis registros' }}</p>
+                    <p class="text-sm text-gray-500 dark:text-gray-400">{{ auth()->user()->isAdmin() ? 'Votantes confirmados' : 'Mis votantes confirmados' }}</p>
                     <p class="mt-2 text-3xl font-semibold text-gray-900 dark:text-gray-100">{{ number_format($totalVotantes) }}</p>
                 </div>
 
                 <div class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-gray-800">
-                    <p class="text-sm text-gray-500 dark:text-gray-400">{{ auth()->user()->isAdmin() ? 'Empleados sin carga' : 'Mis registros' }}</p>
+                    <p class="text-sm text-gray-500 dark:text-gray-400">{{ auth()->user()->isAdmin() ? 'Votantes pendientes' : 'Mis votantes pendientes' }}</p>
                     <p class="mt-2 text-3xl font-semibold text-gray-900 dark:text-gray-100">
-                        {{ auth()->user()->isAdmin() ? number_format($employeeNotifications->count()) : number_format($myVotantes) }}
+                        {{ auth()->user()->isAdmin() ? number_format($pendingVotantes) : number_format($myPendingVotantes) }}
                     </p>
                 </div>
 
@@ -221,6 +355,9 @@
                                                 <div>
                                                     <p class="font-medium text-gray-900 dark:text-gray-100">{{ $votante->nombres }} {{ $votante->apellidos }}</p>
                                                     <p class="text-sm text-gray-500 dark:text-gray-400">{{ $votante->tipo_identificacion }}</p>
+                                                    <span class="mt-2 inline-flex rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide {{ $votante->estado_registro === 'pendiente' ? 'bg-amber-100 text-amber-700 dark:bg-amber-500/10 dark:text-amber-200' : 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300' }}">
+                                                        {{ $votante->estado_registro_label }}
+                                                    </span>
                                                 </div>
                                             </div>
                                         </td>

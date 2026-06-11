@@ -13,7 +13,7 @@
 <div class="grid gap-6 lg:grid-cols-[280px_minmax(0,1fr)]">
     <div class="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-gray-800">
         <h3 class="text-base font-semibold text-gray-900 dark:text-gray-100">Foto del certificado</h3>
-        <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">Carga una imagen clara y legible del certificado electoral.</p>
+        <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">Carga una imagen clara y legible del certificado electoral. Si aún no la tienes, el registro quedará pendiente hasta subirla.</p>
 
         @if (! empty($votante?->foto_certificado_url))
             <div class="mt-5 overflow-hidden rounded-xl border border-gray-200 dark:border-gray-700">
@@ -23,7 +23,7 @@
 
         <label class="mt-5 block">
             <span class="sr-only">Foto del certificado</span>
-            <input type="file" name="foto_certificado" class="block w-full text-sm text-gray-500 file:mr-4 file:rounded-lg file:border-0 file:bg-indigo-600 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-white hover:file:bg-indigo-500 dark:text-gray-400" @if(empty($votante?->foto_certificado)) required @endif>
+            <input type="file" name="foto_certificado" class="block w-full text-sm text-gray-500 file:mr-4 file:rounded-lg file:border-0 file:bg-indigo-600 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-white hover:file:bg-indigo-500 dark:text-gray-400">
         </label>
         @error('foto_certificado')
             <p class="mt-2 text-sm text-red-600">{{ $message }}</p>

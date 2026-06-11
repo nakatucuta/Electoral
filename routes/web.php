@@ -13,14 +13,25 @@ Route::get('/', function () {
 
 $buildPanelData = function (User $user): array {
     $query = Votante::query()->with('user');
+    $confirmedFilter = fn ($query) => $query
+        ->whereNotNull('foto_certificado')
+        ->where('foto_certificado', '!=', '');
+    $pendingFilter = fn ($query) => $query
+        ->where(function ($query) {
+            $query->whereNull('foto_certificado')
+                ->orWhere('foto_certificado', '');
+        });
 
     if (! $user->isAdmin()) {
         $query->where('user_id', $user->id);
     }
 
     $latestVotantes = (clone $query)->latest()->take(5)->get();
+    $confirmedQuery = (clone $query);
+    $pendingQuery = (clone $query);
     $employeeNotifications = collect();
     $employeeStats = collect();
+    $pendingNotificationsTotal = 0;
     $topDepartamentos = collect();
     $topMunicipios = collect();
     $dailyTrend = collect();
@@ -29,15 +40,34 @@ $buildPanelData = function (User $user): array {
 
     if ($user->isAdmin()) {
         $employeeStats = User::query()
-            ->where('role', 'employee')
-            ->withCount('votantes')
+            ->whereHas('votantes')
             ->orderBy('name')
             ->get();
 
-        $employeeNotifications = $employeeStats->where('votantes_count', 0)->values();
+        $countsByEmployee = Votante::query()
+            ->select('user_id')
+            ->selectRaw("SUM(CASE WHEN foto_certificado IS NOT NULL AND foto_certificado <> '' THEN 1 ELSE 0 END) as votantes_confirmados_count")
+            ->selectRaw("SUM(CASE WHEN foto_certificado IS NULL OR foto_certificado = '' THEN 1 ELSE 0 END) as votantes_pendientes_count")
+            ->selectRaw('COUNT(*) as votantes_count')
+            ->groupBy('user_id')
+            ->get()
+            ->keyBy('user_id');
+
+        $employeeStats = $employeeStats->map(function ($employee) use ($countsByEmployee) {
+            $counts = $countsByEmployee->get($employee->id);
+            $employee->votantes_count = (int) ($counts->votantes_count ?? 0);
+            $employee->votantes_confirmados_count = (int) ($counts->votantes_confirmados_count ?? 0);
+            $employee->votantes_pendientes_count = (int) ($counts->votantes_pendientes_count ?? 0);
+
+            return $employee;
+        });
+
+        $employeeNotifications = $employeeStats->where('votantes_pendientes_count', '>', 0)->values();
+        $pendingNotificationsTotal = (int) $employeeNotifications->sum('votantes_pendientes_count');
     }
 
-    $topDepartamentos = (clone $query)
+    $topDepartamentos = (clone $confirmedQuery)
+        ->tap($confirmedFilter)
         ->select('departamento', DB::raw('COUNT(*) as total'))
         ->groupBy('departamento')
         ->orderByDesc('total')
@@ -53,7 +83,8 @@ $buildPanelData = function (User $user): array {
         })
         ->values();
 
-    $topMunicipios = (clone $query)
+    $topMunicipios = (clone $confirmedQuery)
+        ->tap($confirmedFilter)
         ->select('municipio', DB::raw('COUNT(*) as total'))
         ->groupBy('municipio')
         ->orderByDesc('total')
@@ -70,16 +101,20 @@ $buildPanelData = function (User $user): array {
         ->values();
 
     $dailyTrend = collect(range(6, 0))
-        ->map(function ($daysAgo) use ($query) {
+        ->map(function ($daysAgo) use ($confirmedQuery) {
             $date = now()->subDays($daysAgo)->startOfDay();
 
             return [
                 'label' => $date->format('d/m'),
-                'total' => (clone $query)->whereDate('created_at', $date->toDateString())->count(),
+                'total' => (clone $confirmedQuery)->tap(fn ($query) => $query
+                    ->whereNotNull('foto_certificado')
+                    ->where('foto_certificado', '!=', '')
+                )->whereDate('created_at', $date->toDateString())->count(),
             ];
         });
 
-    $departamentoCount = (clone $query)
+    $departamentoCount = (clone $confirmedQuery)
+        ->tap($confirmedFilter)
         ->pluck('departamento')
         ->filter()
         ->map(fn ($value) => trim((string) $value))
@@ -87,7 +122,8 @@ $buildPanelData = function (User $user): array {
         ->unique()
         ->count();
 
-    $municipioCount = (clone $query)
+    $municipioCount = (clone $confirmedQuery)
+        ->tap($confirmedFilter)
         ->pluck('municipio')
         ->filter()
         ->map(fn ($value) => trim((string) $value))
@@ -96,9 +132,14 @@ $buildPanelData = function (User $user): array {
         ->count();
 
     return [
-        'totalVotantes' => (clone $query)->count(),
+        'totalVotantes' => (clone $confirmedQuery)->tap($confirmedFilter)->count(),
+        'pendingVotantes' => (clone $pendingQuery)->tap($pendingFilter)->count(),
+        'pendingNotificationsTotal' => $pendingNotificationsTotal,
         'latestVotantes' => $latestVotantes,
-        'myVotantes' => Votante::where('user_id', $user->id)->count(),
+        'myVotantes' => Votante::where('user_id', $user->id)->whereNotNull('foto_certificado')->where('foto_certificado', '!=', '')->count(),
+        'myPendingVotantes' => Votante::where('user_id', $user->id)->where(function ($query) {
+            $query->whereNull('foto_certificado')->orWhere('foto_certificado', '');
+        })->count(),
         'employeeStats' => $employeeStats,
         'employeeNotifications' => $employeeNotifications,
         'topDepartamentos' => $topDepartamentos,
@@ -123,6 +164,110 @@ Route::middleware([
 
         return view('estadisticas', $buildPanelData($user));
     })->name('estadisticas');
+
+    Route::get('estadisticas/pendientes', function () {
+        abort_unless(auth()->user()->isAdmin(), 403);
+
+        $perPage = (int) request()->integer('per_page', 10);
+        $perPage = max(5, min($perPage, 25));
+
+        $paginator = Votante::query()
+            ->with('user')
+            ->where(function ($query) {
+                $query->whereNull('foto_certificado')
+                    ->orWhere('foto_certificado', '');
+            })
+            ->latest()
+            ->paginate($perPage);
+
+        return response()->json([
+            'responsable' => [
+                'id' => 0,
+                'name' => 'Pendientes globales',
+                'email' => '',
+                'role' => 'admin',
+                'sede' => '',
+            ],
+            'meta' => [
+                'total' => $paginator->total(),
+                'per_page' => $paginator->perPage(),
+                'current_page' => $paginator->currentPage(),
+                'last_page' => $paginator->lastPage(),
+            ],
+            'items' => collect($paginator->items())->map(function (Votante $votante) {
+                return [
+                    'id' => $votante->id,
+                    'nombres' => $votante->nombres,
+                    'apellidos' => $votante->apellidos,
+                    'tipo_identificacion' => $votante->tipo_identificacion,
+                    'numero_identificacion' => $votante->numero_identificacion,
+                    'telefono' => $votante->telefono,
+                    'departamento' => $votante->departamento,
+                    'municipio' => $votante->municipio,
+                    'puesto_votacion' => $votante->puesto_votacion,
+                    'comuna' => $votante->comuna,
+                    'direccion' => $votante->direccion,
+                    'mesa_votacion' => $votante->mesa_votacion,
+                    'relacion' => $votante->relacion,
+                    'estado_registro_label' => $votante->estado_registro_label,
+                    'created_at' => optional($votante->created_at)->format('d/m/Y H:i'),
+                    'responsable_nombre' => $votante->user?->name,
+                    'responsable_email' => $votante->user?->email,
+                ];
+            })->values(),
+        ]);
+    })->name('estadisticas.pendientes');
+
+    Route::get('responsables/{user}/pendientes', function (User $user) {
+        abort_unless(auth()->user()->isAdmin(), 403);
+
+        $perPage = (int) request()->integer('per_page', 10);
+        $perPage = max(5, min($perPage, 25));
+
+        $paginator = Votante::query()
+            ->where('user_id', $user->id)
+            ->where(function ($query) {
+                $query->whereNull('foto_certificado')
+                    ->orWhere('foto_certificado', '');
+            })
+            ->latest()
+            ->paginate($perPage);
+
+        return response()->json([
+            'responsable' => [
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+                'role' => $user->role,
+                'sede' => $user->sede,
+            ],
+            'meta' => [
+                'total' => $paginator->total(),
+                'per_page' => $paginator->perPage(),
+                'current_page' => $paginator->currentPage(),
+                'last_page' => $paginator->lastPage(),
+            ],
+            'items' => collect($paginator->items())->map(function (Votante $votante) {
+                return [
+                    'id' => $votante->id,
+                    'nombres' => $votante->nombres,
+                    'apellidos' => $votante->apellidos,
+                    'tipo_identificacion' => $votante->tipo_identificacion,
+                    'numero_identificacion' => $votante->numero_identificacion,
+                    'telefono' => $votante->telefono,
+                    'departamento' => $votante->departamento,
+                    'municipio' => $votante->municipio,
+                    'puesto_votacion' => $votante->puesto_votacion,
+                    'comuna' => $votante->comuna,
+                    'direccion' => $votante->direccion,
+                    'mesa_votacion' => $votante->mesa_votacion,
+                    'relacion' => $votante->relacion,
+                    'estado_registro_label' => $votante->estado_registro_label,
+                    'created_at' => optional($votante->created_at)->format('d/m/Y H:i'),
+                ];
+            })->values(),
+        ]);
+    })->name('responsables.pendientes');
 
     Route::get('votantes/validar-numero-identificacion', [VotanteController::class, 'checkNumeroIdentificacion'])
         ->name('votantes.check-numero');

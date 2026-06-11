@@ -352,6 +352,81 @@ Alpine.data('dashboardStats', (config) => ({
         }
     },
 }));
+
+Alpine.data('novedadesPanel', (config) => ({
+    open: false,
+    loading: false,
+    error: '',
+    responsables: [],
+    selected: null,
+    detalle: [],
+    meta: {
+        total: 0,
+        per_page: 10,
+        current_page: 1,
+        last_page: 1,
+    },
+    async openDetalle(responsable) {
+        this.open = true;
+        this.selected = responsable;
+        await this.loadDetalle(1);
+    },
+    close() {
+        this.open = false;
+        this.loading = false;
+        this.error = '';
+        this.detalle = [];
+        this.selected = null;
+        this.meta = {
+            total: 0,
+            per_page: 10,
+            current_page: 1,
+            last_page: 1,
+        };
+    },
+    async loadDetalle(page = 1) {
+        if (!this.selected) {
+            return;
+        }
+
+        this.loading = true;
+        this.error = '';
+
+        try {
+            const endpoint = this.selected.id === 0 ? config.globalUrl : `${config.baseUrl}/${this.selected.id}/pendientes`;
+            const url = new URL(endpoint, window.location.origin);
+            url.searchParams.set('page', String(page));
+            url.searchParams.set('per_page', '10');
+
+            const response = await fetch(url.toString(), {
+                headers: { Accept: 'application/json' },
+            });
+
+            if (!response.ok) {
+                throw new Error('No se pudo cargar el detalle.');
+            }
+
+            const data = await response.json();
+            this.selected = data.responsable ?? this.selected;
+            this.detalle = Array.isArray(data.items) ? data.items : [];
+            this.meta = data.meta ?? this.meta;
+        } catch (error) {
+            this.error = 'No se pudo cargar el detalle de pendientes.';
+        } finally {
+            this.loading = false;
+        }
+    },
+    nextPage() {
+        if (this.meta.current_page < this.meta.last_page) {
+            void this.loadDetalle(this.meta.current_page + 1);
+        }
+    },
+    prevPage() {
+        if (this.meta.current_page > 1) {
+            void this.loadDetalle(this.meta.current_page - 1);
+        }
+    },
+}));
 const loginApp = document.getElementById('login-app');
 
 if (loginApp) {

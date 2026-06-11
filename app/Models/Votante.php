@@ -30,6 +30,8 @@ class Votante extends Model
 
     protected $appends = [
         'foto_certificado_url',
+        'estado_registro',
+        'estado_registro_label',
     ];
 
     public function user(): BelongsTo
@@ -50,5 +52,15 @@ class Votante extends Model
         }
 
         return Storage::disk('public')->url($this->foto_certificado);
+    }
+
+    public function getEstadoRegistroAttribute(): string
+    {
+        return $this->foto_certificado ? 'confirmado' : 'pendiente';
+    }
+
+    public function getEstadoRegistroLabelAttribute(): string
+    {
+        return $this->foto_certificado ? 'Confirmado' : 'Pendiente';
     }
 }

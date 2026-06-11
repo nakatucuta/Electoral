@@ -22,7 +22,7 @@ class StoreVotanteRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'foto_certificado' => ['required', 'image', 'max:5120'],
+            'foto_certificado' => ['nullable', 'image', 'max:5120'],
             'nombres' => ['required', 'string', 'max:255'],
             'apellidos' => ['required', 'string', 'max:255'],
             'tipo_identificacion' => ['required', Rule::in(['cc', 'cd', 'ce', 'pasaporte'])],

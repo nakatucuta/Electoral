@@ -1,0 +1,200 @@
+[
+  {
+    "codigo": "05",
+    "nombre": "ANTIOQUIA",
+    "latitud": 6.702032125,
+    "longitud": -75.504557037
+  },
+  {
+    "codigo": "08",
+    "nombre": "ATLÁNTICO",
+    "latitud": 10.677009534,
+    "longitud": -74.965219492
+  },
+  {
+    "codigo": "11",
+    "nombre": "BOGOTÁ, D.C.",
+    "latitud": 4.316107698,
+    "longitud": -74.181072702
+  },
+  {
+    "codigo": "13",
+    "nombre": "BOLÍVAR",
+    "latitud": 8.079796863,
+    "longitud": -74.235148136
+  },
+  {
+    "codigo": "15",
+    "nombre": "BOYACÁ",
+    "latitud": 5.891672889,
+    "longitud": -72.627880544
+  },
+  {
+    "codigo": "17",
+    "nombre": "CALDAS",
+    "latitud": 5.280139978,
+    "longitud": -75.274983037
+  },
+  {
+    "codigo": "18",
+    "nombre": "CAQUETÁ",
+    "latitud": 0.798556195,
+    "longitud": -73.959467561
+  },
+  {
+    "codigo": "19",
+    "nombre": "CAUCA",
+    "latitud": 2.396833887,
+    "longitud": -76.824232828
+  },
+  {
+    "codigo": "20",
+    "nombre": "CESAR",
+    "latitud": 9.53665993,
+    "longitud": -73.517831544
+  },
+  {
+    "codigo": "23",
+    "nombre": "CÓRDOBA",
+    "latitud": 8.358549754,
+    "longitud": -75.792008718
+  },
+  {
+    "codigo": "25",
+    "nombre": "CUNDINAMARCA",
+    "latitud": 4.771120716,
+    "longitud": -74.431110916
+  },
+  {
+    "codigo": "27",
+    "nombre": "CHOCÓ",
+    "latitud": 5.397581542,
+    "longitud": -76.942811002
+  },
+  {
+    "codigo": "41",
+    "nombre": "HUILA",
+    "latitud": 2.570143029,
+    "longitud": -75.584348363
+  },
+  {
+    "codigo": "44",
+    "nombre": "LA GUAJIRA",
+    "latitud": 11.476870077,
+    "longitud": -72.429510724
+  },
+  {
+    "codigo": "47",
+    "nombre": "MAGDALENA",
+    "latitud": 10.24738355,
+    "longitud": -74.26175733
+  },
+  {
+    "codigo": "50",
+    "nombre": "META",
+    "latitud": 3.345562732,
+    "longitud": -72.95645988
+  },
+  {
+    "codigo": "52",
+    "nombre": "NARIÑO",
+    "latitud": 1.571094987,
+    "longitud": -77.87020496
+  },
+  {
+    "codigo": "54",
+    "nombre": "NORTE DE SANTANDER",
+    "latitud": 8.09513751,
+    "longitud": -72.881882969
+  },
+  {
+    "codigo": "63",
+    "nombre": "QUINDÍO",
+    "latitud": 4.455241567,
+    "longitud": -75.689628528
+  },
+  {
+    "codigo": "66",
+    "nombre": "RISARALDA",
+    "latitud": 5.240757239,
+    "longitud": -76.002444694
+  },
+  {
+    "codigo": "68",
+    "nombre": "SANTANDER",
+    "latitud": 6.693633184,
+    "longitud": -73.486008938
+  },
+  {
+    "codigo": "70",
+    "nombre": "SUCRE",
+    "latitud": 9.064941448,
+    "longitud": -75.109817552
+  },
+  {
+    "codigo": "73",
+    "nombre": "TOLIMA",
+    "latitud": 4.03477252,
+    "longitud": -75.255827095
+  },
+  {
+    "codigo": "76",
+    "nombre": "VALLE DEL CAUCA",
+    "latitud": 3.569858693,
+    "longitud": -76.62850427
+  },
+  {
+    "codigo": "81",
+    "nombre": "ARAUCA",
+    "latitud": 6.569577215,
+    "longitud": -70.967323937
+  },
+  {
+    "codigo": "85",
+    "nombre": "CASANARE",
+    "latitud": 5.404064237,
+    "longitud": -71.601880726
+  },
+  {
+    "codigo": "86",
+    "nombre": "PUTUMAYO",
+    "latitud": 0.3673031,
+    "longitud": -75.514061833
+  },
+  {
+    "codigo": "88",
+    "nombre": "ARCHIPIÉLAGO DE SAN ANDRÉS, PROVIDENCIA Y SANTA CATALINA",
+    "latitud": 12.543115116,
+    "longitud": -81.717623824
+  },
+  {
+    "codigo": "91",
+    "nombre": "AMAZONAS",
+    "latitud": -1.54622768,
+    "longitud": -71.502128578
+  },
+  {
+    "codigo": "94",
+    "nombre": "GUAINÍA",
+    "latitud": 2.727842865,
+    "longitud": -68.816612721
+  },
+  {
+    "codigo": "95",
+    "nombre": "GUAVIARE",
+    "latitud": 1.924531973,
+    "longitud": -72.128595691
+  },
+  {
+    "codigo": "97",
+    "nombre": "VAUPÉS",
+    "latitud": 0.64624561,
+    "longitud": -70.561405657
+  },
+  {
+    "codigo": "99",
+    "nombre": "VICHADA",
+    "latitud": 4.713557125,
+    "longitud": -69.41400011
+  }
+]

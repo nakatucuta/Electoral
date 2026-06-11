@@ -20,6 +20,21 @@
             </div>
 
             <div class="mt-4">
+                <x-label for="role" value="{{ __('Tipo de usuario') }}" />
+                <select id="role" name="role" class="block mt-1 w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600 rounded-md shadow-sm" required>
+                    <option value="employee" @selected(old('role', 'employee') === 'employee')>Empleado</option>
+                    <option value="admin" @selected(old('role') === 'admin')>Administrador</option>
+                </select>
+                <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">El administrador puede ver y administrar todos los votantes. El empleado solo gestiona los suyos.</p>
+            </div>
+
+            <div class="mt-4">
+                <x-label for="sede" value="{{ __('Sede') }}" />
+                <x-input id="sede" class="block mt-1 w-full" type="text" name="sede" :value="old('sede')" required autocomplete="organization" />
+                <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">Registra la sede del usuario para aplicar la misma normativa en empleados y administradores.</p>
+            </div>
+
+            <div class="mt-4">
                 <x-label for="password" value="{{ __('Password') }}" />
                 <x-input id="password" class="block mt-1 w-full" type="password" name="password" required autocomplete="new-password" />
             </div>

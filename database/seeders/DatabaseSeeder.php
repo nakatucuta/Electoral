@@ -15,11 +15,19 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // User::factory(10)->create();
-
-        User::factory()->create([
-            'name' => 'Test User',
-            'email' => 'test@example.com',
+        $this->call([
+            GeoCatalogSeeder::class,
+            CatalogoPuestosVotacionSeeder::class,
         ]);
+
+        User::updateOrCreate(
+            ['email' => 'test@example.com'],
+            [
+                'name' => 'Test User',
+                'sede' => 'Principal',
+                'role' => 'admin',
+                'password' => bcrypt('password'),
+            ]
+        );
     }
 }

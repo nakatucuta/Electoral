@@ -6,7 +6,10 @@
                 <!-- Logo -->
                 <div class="shrink-0 flex items-center">
                     <a href="{{ route('dashboard') }}">
-                        <x-application-mark class="block h-9 w-auto" />
+                        <span class="inline-flex items-center gap-3">
+                            <x-application-mark class="block h-9 w-9 shrink-0" />
+                            <span class="hidden text-base font-semibold tracking-normal text-gray-900 dark:text-gray-100 sm:inline">Electoral</span>
+                        </span>
                     </a>
                 </div>
 
@@ -14,6 +17,9 @@
                 <div class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
                     <x-nav-link href="{{ route('dashboard') }}" :active="request()->routeIs('dashboard')">
                         {{ __('Dashboard') }}
+                    </x-nav-link>
+                    <x-nav-link href="{{ route('votantes.index') }}" :active="request()->routeIs('votantes.*')">
+                        {{ __('Votantes') }}
                     </x-nav-link>
                 </div>
             </div>
@@ -141,6 +147,9 @@
         <div class="pt-2 pb-3 space-y-1">
             <x-responsive-nav-link href="{{ route('dashboard') }}" :active="request()->routeIs('dashboard')">
                 {{ __('Dashboard') }}
+            </x-responsive-nav-link>
+            <x-responsive-nav-link href="{{ route('votantes.index') }}" :active="request()->routeIs('votantes.*')">
+                {{ __('Votantes') }}
             </x-responsive-nav-link>
         </div>
 

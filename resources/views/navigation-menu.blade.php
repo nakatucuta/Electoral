@@ -21,6 +21,11 @@
                     <x-nav-link href="{{ route('votantes.index') }}" :active="request()->routeIs('votantes.*')">
                         {{ __('Votantes') }}
                     </x-nav-link>
+                    @if (auth()->user()?->isAdmin())
+                        <x-nav-link href="{{ route('users.roles') }}" :active="request()->routeIs('users.roles')">
+                            {{ __('Usuarios') }}
+                        </x-nav-link>
+                    @endif
                 </div>
             </div>
 
@@ -151,6 +156,11 @@
             <x-responsive-nav-link href="{{ route('votantes.index') }}" :active="request()->routeIs('votantes.*')">
                 {{ __('Votantes') }}
             </x-responsive-nav-link>
+            @if (auth()->user()?->isAdmin())
+                <x-responsive-nav-link href="{{ route('users.roles') }}" :active="request()->routeIs('users.roles')">
+                    {{ __('Usuarios') }}
+                </x-responsive-nav-link>
+            @endif
         </div>
 
         <!-- Responsive Settings Options -->

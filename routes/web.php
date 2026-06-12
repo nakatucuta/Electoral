@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\VotanteController;
 use App\Http\Controllers\CatalogoUbicacionController;
+use App\Http\Controllers\RoleManagementController;
 use App\Models\User;
 use App\Models\Votante;
 use Illuminate\Support\Facades\DB;
@@ -274,6 +275,12 @@ Route::middleware([
 
     Route::get('catalogos/ubicacion/buscar', [CatalogoUbicacionController::class, 'search'])
         ->name('catalogos.ubicacion.search');
+
+    Route::get('usuarios/roles', [RoleManagementController::class, 'index'])
+        ->name('users.roles');
+
+    Route::patch('usuarios/{user}/rol', [RoleManagementController::class, 'update'])
+        ->name('users.roles.update');
 
     Route::get('votantes/exportar/excel', [VotanteController::class, 'exportExcel'])
         ->name('votantes.export.excel');

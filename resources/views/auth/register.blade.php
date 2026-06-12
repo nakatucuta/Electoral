@@ -15,8 +15,13 @@
             </div>
 
             <div class="mt-4">
+                <x-label for="documento_identificacion" value="Número de cédula" />
+                <x-input id="documento_identificacion" class="block mt-1 w-full" type="text" name="documento_identificacion" :value="old('documento_identificacion')" required inputmode="numeric" autocomplete="username" />
+            </div>
+
+            <div class="mt-4">
                 <x-label for="email" value="{{ __('Email') }}" />
-                <x-input id="email" class="block mt-1 w-full" type="email" name="email" :value="old('email')" required autocomplete="username" />
+                <x-input id="email" class="block mt-1 w-full" type="email" name="email" :value="old('email')" required autocomplete="email" />
             </div>
 
             <div class="mt-4">

@@ -80,19 +80,20 @@
                             <input type="hidden" name="_token" :value="csrfToken">
 
                             <div>
-                                <label for="email" class="mb-2 block text-sm font-medium text-slate-700">Correo electrónico</label>
+                                <label for="documento_identificacion" class="mb-2 block text-sm font-medium text-slate-700">Número de cédula</label>
                                 <input
-                                    id="email"
-                                    v-model="email"
-                                    type="email"
-                                    name="email"
+                                    id="documento_identificacion"
+                                    v-model="documentoIdentificacion"
+                                    type="text"
+                                    name="documento_identificacion"
                                     autocomplete="username"
                                     required
                                     autofocus
+                                    inputmode="numeric"
                                     class="block w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-slate-900 shadow-sm outline-none transition focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100"
-                                    :class="emailError ? 'border-rose-400 focus:border-rose-500 focus:ring-rose-100' : ''"
+                                    :class="documentoError ? 'border-rose-400 focus:border-rose-500 focus:ring-rose-100' : ''"
                                 >
-                                <p v-if="emailError" class="mt-2 text-sm text-rose-600">{{ emailError }}</p>
+                                <p v-if="documentoError" class="mt-2 text-sm text-rose-600">{{ documentoError }}</p>
                             </div>
 
                             <div>
@@ -161,14 +162,14 @@ const props = defineProps({
     appName: { type: String, required: true },
     loginAction: { type: String, required: true },
     csrfToken: { type: String, required: true },
-    emailValue: { type: String, default: '' },
+    documentoValue: { type: String, default: '' },
     status: { type: String, default: '' },
     errors: { type: Object, default: () => ({}) },
     canResetPassword: { type: Boolean, default: false },
     forgotPasswordUrl: { type: String, default: '#' },
 });
 
-const email = ref(props.emailValue);
+const documentoIdentificacion = ref(props.documentoValue);
 const password = ref('');
 const remember = ref(true);
 const showPassword = ref(false);
@@ -183,7 +184,7 @@ const firstError = (field) => {
     return typeof value === 'string' ? value : '';
 };
 
-const emailError = computed(() => firstError('email'));
+const documentoError = computed(() => firstError('documento_identificacion'));
 const passwordError = computed(() => firstError('password'));
-const hasErrors = computed(() => Boolean(emailError.value || passwordError.value));
+const hasErrors = computed(() => Boolean(documentoError.value || passwordError.value));
 </script>

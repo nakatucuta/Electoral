@@ -4,7 +4,7 @@
             'appName' => config('app.name', 'Electoral'),
             'loginAction' => route('login'),
             'csrfToken' => csrf_token(),
-            'emailValue' => old('email', ''),
+            'documentoValue' => old('documento_identificacion', ''),
             'status' => session('status', ''),
             'errors' => $errors->getMessages(),
             'canResetPassword' => Route::has('password.request'),
@@ -93,8 +93,8 @@
                             @csrf
 
                             <div>
-                                <x-label for="email" value="Correo electrónico" />
-                                <x-input id="email" class="mt-1 block w-full rounded-2xl border-slate-300 bg-white px-4 py-3 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" type="email" name="email" :value="old('email')" required autofocus autocomplete="username" />
+                                <x-label for="documento_identificacion" value="Número de cédula" />
+                                <x-input id="documento_identificacion" class="mt-1 block w-full rounded-2xl border-slate-300 bg-white px-4 py-3 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" type="text" name="documento_identificacion" :value="old('documento_identificacion')" required autofocus inputmode="numeric" autocomplete="username" />
                             </div>
 
                             <div>

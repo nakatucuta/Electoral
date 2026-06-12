@@ -228,9 +228,14 @@ Alpine.data('dashboardStats', (config) => ({
     activeTab: config.initialTab ?? 'resumen',
     charts: [],
     init() {
+        const render = () => this.renderCharts();
+
         this.$nextTick(() => {
-            this.renderCharts();
+            render();
+            setTimeout(render, 0);
         });
+
+        window.addEventListener('load', render, { once: true });
     },
     renderCharts() {
         this.destroyCharts();
@@ -239,9 +244,9 @@ Alpine.data('dashboardStats', (config) => ({
             return;
         }
 
-        const departmentCanvas = this.$refs.departmentChart;
-        const municipalityCanvas = this.$refs.municipalityChart;
-        const trendCanvas = this.$refs.trendChart;
+        const departmentCanvas = this.$refs.departmentChart || document.getElementById('departmentChart');
+        const municipalityCanvas = this.$refs.municipalityChart || document.getElementById('municipalityChart');
+        const trendCanvas = this.$refs.trendChart || document.getElementById('trendChart');
 
         if (departmentCanvas && config.topDepartamentos?.length) {
             this.charts.push(new Chart(departmentCanvas, {

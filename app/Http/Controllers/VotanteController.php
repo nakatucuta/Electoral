@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreVotanteRequest;
 use App\Http\Requests\UpdateVotanteRequest;
 use App\Models\Votante;
+use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -21,32 +23,53 @@ class VotanteController extends Controller
     public function index(Request $request): View
     {
         $user = $request->user();
-        $search = trim((string) $request->string('search'));
-
-        $votantes = Votante::query()
-            ->with('user')
-            ->when(! $user->isAdmin(), fn ($query) => $query->where('user_id', $user->id))
-            ->when($search !== '', function ($query) use ($search) {
-                $query->where(function ($inner) use ($search) {
-                    $inner->where('nombres', 'like', "%{$search}%")
-                        ->orWhere('apellidos', 'like', "%{$search}%")
-                        ->orWhere('numero_identificacion', 'like', "%{$search}%")
-                        ->orWhere('telefono', 'like', "%{$search}%")
-                        ->orWhere('departamento', 'like', "%{$search}%")
-                        ->orWhere('municipio', 'like', "%{$search}%")
-                        ->orWhere('puesto_votacion', 'like', "%{$search}%")
-                        ->orWhere('comuna', 'like', "%{$search}%")
-                        ->orWhere('direccion', 'like', "%{$search}%");
-                });
-            })
-            ->latest()
-            ->paginate(10)
-            ->withQueryString();
+        [$filters, $query] = $this->buildFilteredQuery($request);
+        $votantes = $query->latest()->paginate(10)->withQueryString();
 
         return view('votantes.index', [
             'votantes' => $votantes,
-            'search' => $search,
+            'filters' => $filters,
+            'responsables' => $this->responsablesOptions($user),
+            'departamentos' => $this->distinctOptions('departamento', $user),
+            'municipios' => $this->distinctOptions('municipio', $user),
+            'puestos' => $this->distinctOptions('puesto_votacion', $user),
+            'mesas' => $this->distinctOptions('mesa_votacion', $user),
         ]);
+    }
+
+    public function exportExcel(Request $request)
+    {
+        [, $query] = $this->buildFilteredQuery($request);
+        $rows = $this->exportRows($query->with('user')->latest()->get());
+
+        $filename = 'votantes_' . now()->format('Ymd_His') . '.xlsx';
+        $path = tempnam(sys_get_temp_dir(), 'votantes_');
+
+        if ($path === false) {
+            abort(500, 'No se pudo preparar el archivo de exportacion.');
+        }
+
+        $xlsxPath = $path . '.xlsx';
+        @unlink($path);
+
+        $this->buildXlsxFile($rows, $xlsxPath);
+
+        return response()->download($xlsxPath, $filename)->deleteFileAfterSend(true);
+    }
+
+    public function exportPdf(Request $request)
+    {
+        [$filters, $query] = $this->buildFilteredQuery($request);
+        $votantes = $query->with('user')->latest()->get();
+
+        $pdf = Pdf::loadView('votantes.pdf', [
+            'votantes' => $votantes,
+            'filters' => $filters,
+            'generatedAt' => now(),
+            'total' => $votantes->count(),
+        ])->setPaper('a4', 'landscape');
+
+        return $pdf->download('votantes_' . now()->format('Ymd_His') . '.pdf');
     }
 
     public function create(): View
@@ -135,5 +158,333 @@ class VotanteController extends Controller
         return redirect()
             ->route('votantes.index')
             ->with('flash.banner', 'Votante eliminado correctamente.');
+    }
+
+    /**
+     * @return array{0: array<string, mixed>, 1: Builder}
+     */
+    private function buildFilteredQuery(Request $request): array
+    {
+        $user = $request->user();
+
+        $filters = [
+            'search' => trim((string) $request->string('search')),
+            'responsable' => (string) $request->string('responsable'),
+            'departamento' => trim((string) $request->string('departamento')),
+            'municipio' => trim((string) $request->string('municipio')),
+            'puesto_votacion' => trim((string) $request->string('puesto_votacion')),
+            'mesa_votacion' => trim((string) $request->string('mesa_votacion')),
+            'estado' => (string) $request->string('estado'),
+            'fecha_desde' => (string) $request->string('fecha_desde'),
+            'fecha_hasta' => (string) $request->string('fecha_hasta'),
+        ];
+
+        $query = Votante::query()->with('user');
+
+        if (! $user->isAdmin()) {
+            $query->where('user_id', $user->id);
+        } elseif ($filters['responsable'] !== '') {
+            $query->where('user_id', $filters['responsable']);
+        }
+
+        $query->when($filters['search'] !== '', function ($query) use ($filters) {
+            $query->where(function ($inner) use ($filters) {
+                $inner->where('nombres', 'like', '%' . $filters['search'] . '%')
+                    ->orWhere('apellidos', 'like', '%' . $filters['search'] . '%')
+                    ->orWhere('numero_identificacion', 'like', '%' . $filters['search'] . '%')
+                    ->orWhere('telefono', 'like', '%' . $filters['search'] . '%')
+                    ->orWhere('departamento', 'like', '%' . $filters['search'] . '%')
+                    ->orWhere('municipio', 'like', '%' . $filters['search'] . '%')
+                    ->orWhere('puesto_votacion', 'like', '%' . $filters['search'] . '%')
+                    ->orWhere('comuna', 'like', '%' . $filters['search'] . '%')
+                    ->orWhere('direccion', 'like', '%' . $filters['search'] . '%');
+            });
+        });
+
+        foreach (['departamento', 'municipio', 'puesto_votacion', 'mesa_votacion'] as $field) {
+            if ($filters[$field] !== '') {
+                $query->where($field, $filters[$field]);
+            }
+        }
+
+        if ($filters['estado'] === 'confirmado') {
+            $query->whereNotNull('foto_certificado')->where('foto_certificado', '!=', '');
+        } elseif ($filters['estado'] === 'pendiente') {
+            $query->where(function ($inner) {
+                $inner->whereNull('foto_certificado')->orWhere('foto_certificado', '');
+            });
+        }
+
+        if ($filters['fecha_desde'] !== '') {
+            $query->whereDate('created_at', '>=', $filters['fecha_desde']);
+        }
+
+        if ($filters['fecha_hasta'] !== '') {
+            $query->whereDate('created_at', '<=', $filters['fecha_hasta']);
+        }
+
+        return [$filters, $query];
+    }
+
+    /**
+     * @return array<int, array<string, string>>
+     */
+    private function exportRows($votantes): array
+    {
+        return $votantes->map(function (Votante $votante) {
+            return [
+                'Responsable' => $votante->user?->name ?? 'Sin dato',
+                'Sede' => $votante->user?->sede ?? 'Sin sede',
+                'Estado' => $votante->estado_registro_label,
+                'Nombres' => $votante->nombres,
+                'Apellidos' => $votante->apellidos,
+                'Tipo de identificación' => $votante->tipo_identificacion,
+                'Número de identificación' => $votante->numero_identificacion,
+                'Teléfono' => $votante->telefono ?? 'Sin dato',
+                'Departamento' => $votante->departamento ?? 'Sin dato',
+                'Municipio' => $votante->municipio ?? 'Sin dato',
+                'Puesto de votación' => $votante->puesto_votacion ?? 'Sin dato',
+                'Comuna' => $votante->comuna ?? 'Sin dato',
+                'Dirección' => $votante->direccion ?? 'Sin dato',
+                'Mesa de votación' => $votante->mesa_votacion ?? 'Sin dato',
+                'Relación' => $votante->relacion ?? 'Sin dato',
+                'Registrado' => optional($votante->created_at)->format('d/m/Y H:i'),
+            ];
+        })->all();
+    }
+
+    /**
+     * @param array<int, array<string, string>> $rows
+     */
+    private function buildXlsxFile(array $rows, string $path): void
+    {
+        $headers = array_keys($rows[0] ?? []);
+        $dataRows = array_map('array_values', $rows);
+
+        $zip = new \ZipArchive();
+        if ($zip->open($path, \ZipArchive::CREATE | \ZipArchive::OVERWRITE) !== true) {
+            abort(500, 'No se pudo crear el archivo Excel.');
+        }
+
+        $zip->addFromString('[Content_Types].xml', $this->xlsxContentTypesXml());
+        $zip->addFromString('_rels/.rels', $this->xlsxRootRelsXml());
+        $zip->addFromString('docProps/core.xml', $this->xlsxCoreXml());
+        $zip->addFromString('docProps/app.xml', $this->xlsxAppXml());
+        $zip->addFromString('xl/workbook.xml', $this->xlsxWorkbookXml());
+        $zip->addFromString('xl/_rels/workbook.xml.rels', $this->xlsxWorkbookRelsXml());
+        $zip->addFromString('xl/styles.xml', $this->xlsxStylesXml());
+        $zip->addFromString('xl/worksheets/sheet1.xml', $this->buildSheetXml($headers, $dataRows));
+        $zip->close();
+    }
+
+    /**
+     * @param array<int, string> $headers
+     * @param array<int, array<int, mixed>> $rows
+     */
+    private function buildSheetXml(array $headers, array $rows): string
+    {
+        $xml = [];
+        $xml[] = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>';
+        $xml[] = '<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">';
+        $xml[] = '<sheetViews><sheetView workbookViewId="0"/></sheetViews>';
+        $xml[] = '<sheetFormatPr defaultRowHeight="15"/>';
+        $xml[] = '<sheetData>';
+        $xml[] = $this->buildRowXml(1, $headers, true);
+
+        foreach ($rows as $index => $row) {
+            $xml[] = $this->buildRowXml($index + 2, $row, false);
+        }
+
+        $xml[] = '</sheetData>';
+        $xml[] = '<pageMargins left="0.7" right="0.7" top="0.75" bottom="0.75" header="0.3" footer="0.3"/>';
+        $xml[] = '</worksheet>';
+
+        return implode('', $xml);
+    }
+
+    /**
+     * @param array<int, mixed> $cells
+     */
+    private function buildRowXml(int $rowNumber, array $cells, bool $header = false): string
+    {
+        $xml = ['<row r="' . $rowNumber . '">'];
+
+        foreach (array_values($cells) as $colIndex => $value) {
+            $cellRef = $this->columnLetter($colIndex + 1) . $rowNumber;
+            $style = $header ? ' s="1"' : '';
+            $xml[] = '<c r="' . $cellRef . '" t="inlineStr"' . $style . '>';
+            $xml[] = '<is><t>' . htmlspecialchars((string) $value, ENT_XML1 | ENT_COMPAT, 'UTF-8') . '</t></is>';
+            $xml[] = '</c>';
+        }
+
+        $xml[] = '</row>';
+
+        return implode('', $xml);
+    }
+
+    private function columnLetter(int $index): string
+    {
+        $letter = '';
+
+        while ($index > 0) {
+            $index--;
+            $letter = chr(65 + ($index % 26)) . $letter;
+            $index = intdiv($index, 26);
+        }
+
+        return $letter;
+    }
+
+    private function xlsxContentTypesXml(): string
+    {
+        return <<<'XML'
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">
+  <Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>
+  <Default Extension="xml" ContentType="application/xml"/>
+  <Override PartName="/docProps/app.xml" ContentType="application/vnd.openxmlformats-officedocument.extended-properties+xml"/>
+  <Override PartName="/docProps/core.xml" ContentType="application/vnd.openxmlformats-package.core-properties+xml"/>
+  <Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/>
+  <Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>
+  <Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>
+</Types>
+XML;
+    }
+
+    private function xlsxRootRelsXml(): string
+    {
+        return <<<'XML'
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+  <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/>
+</Relationships>
+XML;
+    }
+
+    private function xlsxWorkbookXml(): string
+    {
+        return <<<'XML'
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">
+  <sheets>
+    <sheet name="Votantes" sheetId="1" r:id="rId1"/>
+  </sheets>
+</workbook>
+XML;
+    }
+
+    private function xlsxWorkbookRelsXml(): string
+    {
+        return <<<'XML'
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+  <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/>
+</Relationships>
+XML;
+    }
+
+    private function xlsxStylesXml(): string
+    {
+        return <<<'XML'
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">
+  <fonts count="2">
+    <font>
+      <sz val="11"/>
+      <color theme="1"/>
+      <name val="Calibri"/>
+      <family val="2"/>
+    </font>
+    <font>
+      <b/>
+      <sz val="11"/>
+      <color theme="1"/>
+      <name val="Calibri"/>
+      <family val="2"/>
+    </font>
+  </fonts>
+  <fills count="2">
+    <fill><patternFill patternType="none"/></fill>
+    <fill><patternFill patternType="gray125"/></fill>
+  </fills>
+  <borders count="1">
+    <border>
+      <left/><right/><top/><bottom/><diagonal/>
+    </border>
+  </borders>
+  <cellStyleXfs count="1">
+    <xf numFmtId="0" fontId="0" fillId="0" borderId="0"/>
+  </cellStyleXfs>
+  <cellXfs count="2">
+    <xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/>
+    <xf numFmtId="0" fontId="1" fillId="0" borderId="0" xfId="0" applyFont="1"/>
+  </cellXfs>
+  <cellStyles count="1">
+    <cellStyle name="Normal" xfId="0" builtinId="0"/>
+  </cellStyles>
+</styleSheet>
+XML;
+    }
+
+    private function xlsxCoreXml(): string
+    {
+        $now = gmdate('Y-m-d\TH:i:s\Z');
+
+        return <<<XML
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<cp:coreProperties xmlns:cp="http://schemas.openxmlformats.org/package/2006/metadata/core-properties" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:dcterms="http://purl.org/dc/terms/" xmlns:dcmitype="http://purl.org/dc/dcmitype/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <dc:creator>Electoral</dc:creator>
+  <cp:lastModifiedBy>Electoral</cp:lastModifiedBy>
+  <dcterms:created xsi:type="dcterms:W3CDTF">$now</dcterms:created>
+  <dcterms:modified xsi:type="dcterms:W3CDTF">$now</dcterms:modified>
+</cp:coreProperties>
+XML;
+    }
+
+    private function xlsxAppXml(): string
+    {
+        return <<<'XML'
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Properties xmlns="http://schemas.openxmlformats.org/officeDocument/2006/extended-properties" xmlns:vt="http://schemas.openxmlformats.org/officeDocument/2006/docPropsVTypes">
+  <Application>Electoral</Application>
+</Properties>
+XML;
+    }
+
+    /**
+     * @return array<int, array{id:int,name:string}>
+     */
+    private function responsablesOptions($user): array
+    {
+        if (! $user->isAdmin()) {
+            return [];
+        }
+
+        return \App\Models\User::query()
+            ->whereHas('votantes')
+            ->orderBy('name')
+            ->get(['id', 'name'])
+            ->map(fn ($item) => ['id' => $item->id, 'name' => $item->name])
+            ->all();
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    private function distinctOptions(string $field, $user): array
+    {
+        $query = Votante::query();
+
+        if (! $user->isAdmin()) {
+            $query->where('user_id', $user->id);
+        }
+
+        return $query->whereNotNull($field)
+            ->where($field, '!=', '')
+            ->distinct()
+            ->orderBy($field)
+            ->pluck($field)
+            ->values()
+            ->all();
     }
 }

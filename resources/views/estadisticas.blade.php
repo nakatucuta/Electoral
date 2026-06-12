@@ -231,7 +231,7 @@
                         </div>
                     </div>
                     <div class="mt-5 h-80">
-                        <canvas x-ref="departmentChart"></canvas>
+                        <canvas id="departmentChart" x-ref="departmentChart"></canvas>
                     </div>
                 </div>
 
@@ -243,7 +243,7 @@
                         </div>
                     </div>
                     <div class="mt-5 h-80">
-                        <canvas x-ref="municipalityChart"></canvas>
+                        <canvas id="municipalityChart" x-ref="municipalityChart"></canvas>
                     </div>
                 </div>
             </div>
@@ -256,7 +256,7 @@
                     </div>
                 </div>
                 <div class="mt-5 h-80">
-                    <canvas x-ref="trendChart"></canvas>
+                    <canvas id="trendChart" x-ref="trendChart"></canvas>
                 </div>
             </div>
 

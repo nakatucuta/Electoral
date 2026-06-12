@@ -275,5 +275,11 @@ Route::middleware([
     Route::get('catalogos/ubicacion/buscar', [CatalogoUbicacionController::class, 'search'])
         ->name('catalogos.ubicacion.search');
 
+    Route::get('votantes/exportar/excel', [VotanteController::class, 'exportExcel'])
+        ->name('votantes.export.excel');
+
+    Route::get('votantes/exportar/pdf', [VotanteController::class, 'exportPdf'])
+        ->name('votantes.export.pdf');
+
     Route::resource('votantes', VotanteController::class);
 });

@@ -288,5 +288,8 @@ Route::middleware([
     Route::get('votantes/exportar/pdf', [VotanteController::class, 'exportPdf'])
         ->name('votantes.export.pdf');
 
+    Route::post('votantes/{votante}/certificado', [VotanteController::class, 'uploadCertificado'])
+        ->name('votantes.certificado.upload');
+
     Route::resource('votantes', VotanteController::class);
 });

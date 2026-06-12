@@ -147,6 +147,25 @@ class VotanteController extends Controller
             ->with('flash.banner', 'Votante actualizado correctamente.');
     }
 
+    public function uploadCertificado(Request $request, Votante $votante): RedirectResponse
+    {
+        $this->authorize('update', $votante);
+
+        $data = $request->validate([
+            'foto_certificado' => ['required', 'image', 'max:5120'],
+        ]);
+
+        if ($votante->foto_certificado) {
+            Storage::disk('public')->delete($votante->foto_certificado);
+        }
+
+        $votante->update([
+            'foto_certificado' => $data['foto_certificado']->store('votantes/certificados', 'public'),
+        ]);
+
+        return back()->with('flash.banner', 'Certificado de votacion cargado correctamente.');
+    }
+
     public function destroy(Votante $votante): RedirectResponse
     {
         if ($votante->foto_certificado) {

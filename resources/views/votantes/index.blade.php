@@ -150,7 +150,8 @@
                                     </div>
                                 @endif
 
-                                <div class="mt-4 flex flex-wrap gap-2">
+                                <div class="mt-4 flex flex-wrap items-center gap-2">
+                                    @include('votantes._certificado_upload', ['votante' => $votante])
                                     <a href="{{ route('votantes.show', $votante) }}" class="rounded-md border border-gray-300 px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-700">Ver</a>
                                     <a href="{{ route('votantes.edit', $votante) }}" class="rounded-md border border-gray-300 px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-700">Editar</a>
                                     <form method="POST" action="{{ route('votantes.destroy', $votante) }}" onsubmit="return confirm('Eliminar este votante?')">
@@ -220,7 +221,8 @@
                                         </td>
                                     @endif
                                     <td class="whitespace-nowrap px-6 py-4 text-right">
-                                        <div class="inline-flex items-center gap-2">
+                                        <div class="flex flex-wrap items-center justify-end gap-2">
+                                            @include('votantes._certificado_upload', ['votante' => $votante])
                                             <a href="{{ route('votantes.show', $votante) }}" class="rounded-md border border-gray-300 px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-700">Ver</a>
                                             <a href="{{ route('votantes.edit', $votante) }}" class="rounded-md border border-gray-300 px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-700">Editar</a>
                                             <form method="POST" action="{{ route('votantes.destroy', $votante) }}" onsubmit="return confirm('Eliminar este votante?')">

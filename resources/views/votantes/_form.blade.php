@@ -199,7 +199,7 @@
 
                 <div>
                     <x-label for="mesa_votacion" value="Mesa de votación del votante" />
-                    <x-input id="mesa_votacion" name="mesa_votacion" type="text" class="mt-1 block w-full" :value="old('mesa_votacion', $votante->mesa_votacion ?? '')" required />
+                    <x-input id="mesa_votacion" name="mesa_votacion" type="number" inputmode="numeric" min="1" step="1" class="mt-1 block w-full" :value="old('mesa_votacion', $votante->mesa_votacion ?? '')" required />
                     <x-input-error for="mesa_votacion" class="mt-2" />
                 </div>
 

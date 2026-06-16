@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreVotanteRequest;
 use App\Http\Requests\UpdateVotanteRequest;
+use App\Models\VotanteAudit;
 use App\Models\Votante;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Database\Eloquent\Builder;
@@ -24,16 +25,28 @@ class VotanteController extends Controller
     {
         $user = $request->user();
         [$filters, $query] = $this->buildFilteredQuery($request);
+        $summaryQuery = clone $query;
         $votantes = $query->latest()->paginate(10)->withQueryString();
+        $confirmedCount = (clone $summaryQuery)->whereNotNull('foto_certificado')->where('foto_certificado', '!=', '')->count();
+        $pendingCount = (clone $summaryQuery)->where(function ($inner) {
+            $inner->whereNull('foto_certificado')->orWhere('foto_certificado', '');
+        })->count();
 
         return view('votantes.index', [
             'votantes' => $votantes,
             'filters' => $filters,
+            'totales' => [
+                'visibles' => (clone $summaryQuery)->count(),
+                'confirmados' => $confirmedCount,
+                'pendientes' => $pendingCount,
+            ],
+            'notificationToasts' => $this->notificationToastsForUser($user),
             'responsables' => $this->responsablesOptions($user),
             'departamentos' => $this->distinctOptions('departamento', $user),
             'municipios' => $this->distinctOptions('municipio', $user),
             'puestos' => $this->distinctOptions('puesto_votacion', $user),
             'mesas' => $this->distinctOptions('mesa_votacion', $user),
+            'relaciones' => $this->distinctOptions('relacion', $user),
         ]);
     }
 
@@ -107,7 +120,11 @@ class VotanteController extends Controller
             $data['foto_certificado'] = $request->file('foto_certificado')->store('votantes/certificados', 'public');
         }
 
-        $request->user()->votantes()->create($data);
+        $votante = $request->user()->votantes()->create($data);
+        $this->recordAudit($votante, $request->user(), 'created', 'Votante registrado', [
+            'estado' => $votante->estado_registro_label,
+            'numero_identificacion' => $votante->numero_identificacion,
+        ]);
 
         return redirect()
             ->route('votantes.index')
@@ -116,7 +133,7 @@ class VotanteController extends Controller
 
     public function show(Votante $votante): View
     {
-        $votante->loadMissing('user');
+        $votante->loadMissing('user', 'audits.user');
 
         return view('votantes.show', compact('votante'));
     }
@@ -141,6 +158,10 @@ class VotanteController extends Controller
         }
 
         $votante->update($data);
+        $this->recordAudit($votante, $request->user(), 'updated', 'Datos del votante actualizados', [
+            'estado' => $votante->estado_registro_label,
+            'numero_identificacion' => $votante->numero_identificacion,
+        ]);
 
         return redirect()
             ->route('votantes.index')
@@ -159,8 +180,15 @@ class VotanteController extends Controller
             Storage::disk('public')->delete($votante->foto_certificado);
         }
 
+        $path = $data['foto_certificado']->store('votantes/certificados', 'public');
+
         $votante->update([
-            'foto_certificado' => $data['foto_certificado']->store('votantes/certificados', 'public'),
+            'foto_certificado' => $path,
+        ]);
+
+        $this->recordAudit($votante, $request->user(), 'certificate_uploaded', 'Certificado cargado o reemplazado', [
+            'path' => $path,
+            'estado' => $votante->estado_registro_label,
         ]);
 
         return back()->with('flash.banner', 'Certificado de votacion cargado correctamente.');
@@ -171,6 +199,10 @@ class VotanteController extends Controller
         if ($votante->foto_certificado) {
             Storage::disk('public')->delete($votante->foto_certificado);
         }
+
+        $this->recordAudit($votante, auth()->user(), 'deleted', 'Votante eliminado', [
+            'numero_identificacion' => $votante->numero_identificacion,
+        ]);
 
         $votante->delete();
 
@@ -189,6 +221,7 @@ class VotanteController extends Controller
         $filters = [
             'search' => trim((string) $request->string('search')),
             'responsable' => (string) $request->string('responsable'),
+            'relacion' => trim((string) $request->string('relacion')),
             'departamento' => trim((string) $request->string('departamento')),
             'municipio' => trim((string) $request->string('municipio')),
             'puesto_votacion' => trim((string) $request->string('puesto_votacion')),
@@ -224,6 +257,10 @@ class VotanteController extends Controller
             if ($filters[$field] !== '') {
                 $query->where($field, $filters[$field]);
             }
+        }
+
+        if ($filters['relacion'] !== '') {
+            $query->where('relacion', $filters['relacion']);
         }
 
         if ($filters['estado'] === 'confirmado') {
@@ -505,5 +542,75 @@ XML;
             ->pluck($field)
             ->values()
             ->all();
+    }
+
+    private function notificationToastsForUser($user)
+    {
+        if ($user->isAdmin()) {
+            $employees = \App\Models\User::query()
+                ->whereHas('votantes')
+                ->orderBy('name')
+                ->get();
+
+            $countsByEmployee = Votante::query()
+                ->select('user_id')
+                ->selectRaw("SUM(CASE WHEN foto_certificado IS NULL OR foto_certificado = '' THEN 1 ELSE 0 END) as votantes_pendientes_count")
+                ->groupBy('user_id')
+                ->get()
+                ->keyBy('user_id');
+
+            return $employees
+                ->map(function ($employee) use ($countsByEmployee) {
+                    $counts = $countsByEmployee->get($employee->id);
+                    $pending = (int) ($counts->votantes_pendientes_count ?? 0);
+
+                    if ($pending <= 0) {
+                        return null;
+                    }
+
+                    return [
+                        'id' => 'employee-' . $employee->id,
+                        'title' => $employee->name,
+                        'message' => $pending . ' votantes siguen pendientes de certificado.',
+                        'subtext' => $employee->sede ?? 'Sin sede',
+                        'tone' => 'warning',
+                        'count' => $pending,
+                    ];
+                })
+                ->filter()
+                ->values();
+        }
+
+        $pending = Votante::where('user_id', $user->id)
+            ->where(function ($query) {
+                $query->whereNull('foto_certificado')->orWhere('foto_certificado', '');
+            })
+            ->count();
+
+        if ($pending <= 0) {
+            return collect();
+        }
+
+        return collect([
+            [
+                'id' => 'my-pending',
+                'title' => 'Tienes certificados pendientes',
+                'message' => 'Aún hay votantes tuyos sin certificado cargado.',
+                'subtext' => 'Revisa el listado cuando puedas.',
+                'tone' => 'warning',
+                'count' => $pending,
+            ],
+        ]);
+    }
+
+    private function recordAudit(Votante $votante, $user, string $action, string $title, array $details = []): void
+    {
+        VotanteAudit::create([
+            'votante_id' => $votante->id,
+            'user_id' => $user?->id,
+            'action' => $action,
+            'title' => $title,
+            'details' => $details,
+        ]);
     }
 }

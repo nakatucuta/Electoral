@@ -16,6 +16,7 @@
                     checkUrl: @js(route('votantes.check-numero')),
                     searchUrl: @js(route('catalogos.ubicacion.search')),
                     ignoreId: @js($votante->id),
+                    submitting: false,
                     initial: @js([
                         'numero_identificacion' => old('numero_identificacion', $votante->numero_identificacion),
                         'telefono' => old('telefono', $votante->telefono),
@@ -26,6 +27,7 @@
                         'direccion' => old('direccion', $votante->direccion),
                     ]),
                 })"
+                @submit.prevent="startSubmit($event)"
                 x-init="init()"
             >
                 @method('PUT')

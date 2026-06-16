@@ -32,6 +32,7 @@ $buildPanelData = function (User $user): array {
     $pendingQuery = (clone $query);
     $employeeNotifications = collect();
     $employeeStats = collect();
+    $notificationToasts = collect();
     $pendingNotificationsTotal = 0;
     $topDepartamentos = collect();
     $topMunicipios = collect();
@@ -65,6 +66,31 @@ $buildPanelData = function (User $user): array {
 
         $employeeNotifications = $employeeStats->where('votantes_pendientes_count', '>', 0)->values();
         $pendingNotificationsTotal = (int) $employeeNotifications->sum('votantes_pendientes_count');
+        $notificationToasts = $employeeNotifications->map(function ($employee) {
+            return [
+                'id' => 'employee-' . $employee->id,
+                'title' => $employee->name,
+                'message' => $employee->votantes_pendientes_count . ' votantes siguen pendientes de certificado.',
+                'subtext' => $employee->sede ?? 'Sin sede',
+                'tone' => 'warning',
+                'count' => $employee->votantes_pendientes_count,
+            ];
+        })->values();
+    } elseif ($user->votantes()->where(function ($query) {
+        $query->whereNull('foto_certificado')->orWhere('foto_certificado', '');
+    })->count() > 0) {
+        $notificationToasts = collect([
+            [
+                'id' => 'my-pending',
+                'title' => 'Tienes certificados pendientes',
+                'message' => 'Aún hay votantes tuyos sin certificado cargado.',
+                'subtext' => 'Revisa el panel de pendientes cuando puedas.',
+                'tone' => 'warning',
+                'count' => $user->votantes()->where(function ($query) {
+                    $query->whereNull('foto_certificado')->orWhere('foto_certificado', '');
+                })->count(),
+            ],
+        ]);
     }
 
     $topDepartamentos = (clone $confirmedQuery)
@@ -143,6 +169,7 @@ $buildPanelData = function (User $user): array {
         })->count(),
         'employeeStats' => $employeeStats,
         'employeeNotifications' => $employeeNotifications,
+        'notificationToasts' => $notificationToasts,
         'topDepartamentos' => $topDepartamentos,
         'topMunicipios' => $topMunicipios,
         'dailyTrend' => $dailyTrend,

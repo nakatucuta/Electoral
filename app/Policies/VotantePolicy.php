@@ -34,6 +34,6 @@ class VotantePolicy
 
     public function delete(User $user, Votante $votante): bool
     {
-        return $votante->user_id === $user->id;
+        return $user->isAdmin();
     }
 }

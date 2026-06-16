@@ -59,6 +59,8 @@ Alpine.data('votanteForm', (config) => ({
     puesto_votacion: config.initial?.puesto_votacion ?? '',
     comuna: config.initial?.comuna ?? '',
     direccion: config.initial?.direccion ?? '',
+    submitting: false,
+    submissionStage: 'preparando',
     numeroExiste: false,
     numeroMensaje: '',
     numeroChequeando: false,
@@ -207,6 +209,26 @@ Alpine.data('votanteForm', (config) => ({
         this.suggestionsVisible[field] = false;
         this.suggestionsLoading[field] = false;
     },
+    startSubmit(event) {
+        if (this.submitting) {
+            return;
+        }
+
+        this.submitting = true;
+        this.submissionStage = 'preparando';
+
+        const form = event?.target;
+
+        this._submissionTimers = [
+            setTimeout(() => {
+                this.submissionStage = 'validando';
+            }, 280),
+            setTimeout(() => {
+                this.submissionStage = 'guardando';
+                form?.submit();
+            }, 750),
+        ];
+    },
     init() {
         this.$watch('numeroIdentificacion', () => {
             this.programarValidacionNumero();
@@ -220,6 +242,117 @@ Alpine.data('votanteForm', (config) => ({
         fields.forEach((field) => {
             void this.buscarCatalogo(field, false);
         });
+    },
+}));
+
+Alpine.data('submissionFeedback', (config = {}) => ({
+    submitting: false,
+    submissionStage: 'preparando',
+    selectedFileName: '',
+    selectedFilePreview: '',
+    errorMessage: '',
+    targetName: config.name ?? 'el registro',
+    _submissionTimers: [],
+    get stageMessage() {
+        if (this.submissionStage === 'error') {
+            return 'Archivo no válido';
+        }
+
+        if (this.submissionStage === 'validando') {
+            return 'Validando imagen...';
+        }
+
+        if (this.submissionStage === 'guardando') {
+            return 'Guardando registro...';
+        }
+
+        return 'Preparando carga...';
+    },
+    isValidImageFile(file) {
+        if (!file) {
+            return false;
+        }
+
+        if (file.type && file.type.startsWith('image/')) {
+            return true;
+        }
+
+        return /\.(png|jpe?g|gif|webp|bmp|svg)$/i.test(file.name ?? '');
+    },
+    async prepareUpload(event) {
+        const file = event?.target?.files?.[0];
+
+        if (!file) {
+            return;
+        }
+
+        this.selectedFileName = file.name;
+        this.selectedFilePreview = '';
+        this.errorMessage = '';
+
+        if (!this.isValidImageFile(file)) {
+            this.submitting = true;
+            this.submissionStage = 'error';
+            this.errorMessage = 'El archivo debe ser una imagen. Selecciona un PNG, JPG, GIF, WEBP o BMP.';
+
+            this._submissionTimers = [
+                setTimeout(() => {
+                    this.submitting = false;
+                    this.submissionStage = 'preparando';
+                    this.errorMessage = '';
+                    this.selectedFileName = '';
+                }, 3500),
+            ];
+
+            return;
+        }
+
+        this.submitting = true;
+        this.submissionStage = 'preparando';
+
+        if (file.type && file.type.startsWith('image/')) {
+            try {
+                this.selectedFilePreview = await new Promise((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.onload = () => resolve(String(reader.result ?? ''));
+                    reader.onerror = () => reject(new Error('No se pudo leer la imagen.'));
+                    reader.readAsDataURL(file);
+                });
+            } catch (error) {
+                this.selectedFilePreview = '';
+            }
+        }
+
+        const form = event?.target?.closest('form');
+
+        this._submissionTimers = [
+            setTimeout(() => {
+                this.submissionStage = 'validando';
+            }, 280),
+            setTimeout(() => {
+                this.submissionStage = 'guardando';
+                form?.submit();
+            }, 750),
+        ];
+    },
+    startSubmit(event) {
+        if (this.submitting) {
+            return;
+        }
+
+        const form = event?.target;
+        this.submitting = true;
+        this.submissionStage = 'preparando';
+
+        this._submissionTimers = [
+            setTimeout(() => {
+                this.submissionStage = 'validando';
+            }, 280),
+            setTimeout(() => {
+                this.submissionStage = 'guardando';
+                form?.submit();
+            }, 750),
+        ];
     },
 }));
 
@@ -430,6 +563,45 @@ Alpine.data('novedadesPanel', (config) => ({
         if (this.meta.current_page > 1) {
             void this.loadDetalle(this.meta.current_page - 1);
         }
+    },
+}));
+
+Alpine.data('toastStack', (config = {}) => ({
+    toasts: Array.isArray(config.initialToasts)
+        ? config.initialToasts.map((toast) => ({ ...toast }))
+        : [],
+    init() {
+        this.toasts.forEach((toast, index) => {
+            setTimeout(() => {
+                this.dismiss(toast.id);
+            }, 12000 + (index * 1800));
+        });
+    },
+    dismiss(id) {
+        this.toasts = this.toasts.filter((toast) => toast.id !== id);
+    },
+    toneClasses(tone) {
+        if (tone === 'success') {
+            return {
+                panel: 'border-emerald-200 bg-emerald-50 text-emerald-950 shadow-emerald-950/10 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-50',
+                badge: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-200',
+                icon: 'text-emerald-600',
+            };
+        }
+
+        if (tone === 'danger') {
+            return {
+                panel: 'border-red-200 bg-red-50 text-red-950 shadow-red-950/10 dark:border-red-500/30 dark:bg-red-500/10 dark:text-red-50',
+                badge: 'bg-red-100 text-red-700 dark:bg-red-500/15 dark:text-red-200',
+                icon: 'text-red-600',
+            };
+        }
+
+        return {
+            panel: 'border-amber-200 bg-amber-50 text-amber-950 shadow-amber-950/10 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-50',
+            badge: 'bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-200',
+            icon: 'text-amber-600',
+        };
     },
 }));
 const loginApp = document.getElementById('login-app');

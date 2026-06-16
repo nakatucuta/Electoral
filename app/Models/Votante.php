@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Facades\Storage;
 
 class Votante extends Model
@@ -39,6 +40,11 @@ class Votante extends Model
         return $this->belongsTo(User::class);
     }
 
+    public function audits(): HasMany
+    {
+        return $this->hasMany(VotanteAudit::class)->latest();
+    }
+
     public function getFotoCertificadoUrlAttribute(): ?string
     {
         if (! $this->foto_certificado) {
@@ -46,12 +52,13 @@ class Votante extends Model
         }
 
         $baseUrl = request()?->getBaseUrl();
+        $version = $this->updated_at?->timestamp ?? $this->created_at?->timestamp ?? time();
 
         if ($baseUrl !== null && $baseUrl !== '') {
-            return rtrim($baseUrl, '/') . '/storage/' . ltrim($this->foto_certificado, '/');
+            return rtrim($baseUrl, '/') . '/storage/' . ltrim($this->foto_certificado, '/') . '?v=' . $version;
         }
 
-        return Storage::disk('public')->url($this->foto_certificado);
+        return Storage::disk('public')->url($this->foto_certificado) . '?v=' . $version;
     }
 
     public function getEstadoRegistroAttribute(): string

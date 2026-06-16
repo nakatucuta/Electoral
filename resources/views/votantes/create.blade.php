@@ -16,6 +16,7 @@
                     checkUrl: @js(route('votantes.check-numero')),
                     searchUrl: @js(route('catalogos.ubicacion.search')),
                     ignoreId: null,
+                    submitting: false,
                     initial: @js([
                         'numero_identificacion' => old('numero_identificacion', ''),
                         'telefono' => old('telefono', ''),
@@ -26,6 +27,7 @@
                         'direccion' => old('direccion', ''),
                     ]),
                 })"
+                @submit.prevent="startSubmit($event)"
                 x-init="init()"
             >
                 @php($votante = null)

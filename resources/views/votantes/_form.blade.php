@@ -239,6 +239,30 @@
             </div>
         </div>
     </div>
+
+    <div
+        x-cloak
+        x-show="submitting"
+        x-transition.opacity
+        class="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-950/70 px-4 backdrop-blur-sm"
+        role="status"
+        aria-live="polite"
+        aria-label="Guardando votante"
+    >
+        <div class="w-full max-w-[min(24rem,calc(100vw-2rem))] rounded-2xl border border-white/10 bg-white p-6 text-center shadow-2xl shadow-black/30 dark:bg-gray-900">
+            <div class="mx-auto flex justify-center">
+                <x-application-logo class="h-10 w-auto text-gray-900 dark:text-white" />
+            </div>
+            <div class="mx-auto mt-4 flex h-14 w-14 items-center justify-center rounded-full bg-indigo-600/10 text-indigo-600">
+                <svg class="h-7 w-7 animate-spin" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                    <circle cx="12" cy="12" r="9" class="opacity-20" stroke="currentColor" stroke-width="3"></circle>
+                    <path d="M21 12a9 9 0 0 1-9 9" stroke="currentColor" stroke-width="3" stroke-linecap="round"></path>
+                </svg>
+            </div>
+            <p class="mt-4 text-lg font-semibold text-gray-900 dark:text-gray-100" x-text="submissionStage === 'validando' ? 'Validando imagen...' : (submissionStage === 'guardando' ? 'Guardando registro...' : 'Preparando carga...')"></p>
+            <p class="mt-2 whitespace-normal break-words text-sm leading-6 text-gray-500 text-balance dark:text-gray-400">Por favor espera mientras se carga la información y el certificado.</p>
+        </div>
+    </div>
 </div>
 
 

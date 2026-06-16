@@ -395,5 +395,54 @@
 
         </div>
     </div>
+
+    @if (! empty($notificationToasts) && $notificationToasts->count())
+        <div
+            x-data="toastStack({ initialToasts: @js($notificationToasts) })"
+            class="pointer-events-none fixed bottom-4 right-4 z-[80] flex w-full max-w-sm flex-col gap-3 px-4 sm:bottom-6 sm:right-6 sm:px-0"
+        >
+            <template x-for="toast in toasts" :key="toast.id">
+                <div
+                    x-show="true"
+                    x-transition:enter="transition ease-out duration-300"
+                    x-transition:enter-start="opacity-0 translate-y-3 scale-95"
+                    x-transition:enter-end="opacity-100 translate-y-0 scale-100"
+                    x-transition:leave="transition ease-in duration-200"
+                    x-transition:leave-start="opacity-100 translate-y-0 scale-100"
+                    x-transition:leave-end="opacity-0 translate-y-3 scale-95"
+                    class="pointer-events-auto overflow-hidden rounded-2xl border shadow-xl backdrop-blur-sm"
+                    :class="toneClasses(toast.tone).panel"
+                >
+                    <div class="flex items-start gap-3 p-4">
+                        <div class="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/70 dark:bg-black/20">
+                            <svg class="h-5 w-5" :class="toneClasses(toast.tone).icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M12 6v6l4 2" stroke-linecap="round" stroke-linejoin="round"></path>
+                                <path d="M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" stroke-linecap="round" stroke-linejoin="round"></path>
+                            </svg>
+                        </div>
+
+                        <div class="min-w-0 flex-1">
+                            <div class="flex items-start justify-between gap-3">
+                                <div>
+                                    <p class="text-sm font-semibold" x-text="toast.title"></p>
+                                    <p class="mt-1 text-sm leading-5 opacity-90" x-text="toast.message"></p>
+                                </div>
+                                <button type="button" @click="dismiss(toast.id)" class="rounded-lg p-1 transition hover:bg-black/5 dark:hover:bg-white/10" aria-label="Cerrar notificación">
+                                    <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M18 6 6 18M6 6l12 12" stroke-linecap="round" stroke-linejoin="round"></path>
+                                    </svg>
+                                </button>
+                            </div>
+
+                            <div class="mt-3 flex flex-wrap items-center gap-2">
+                                <span class="inline-flex rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide" :class="toneClasses(toast.tone).badge" x-text="toast.subtext"></span>
+                                <span class="inline-flex rounded-full bg-white/70 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide text-gray-700 dark:bg-black/20 dark:text-gray-100" x-text="toast.count ? `${toast.count} pendientes` : 'Novedad'"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </template>
+        </div>
+    @endif
 </x-app-layout>
 

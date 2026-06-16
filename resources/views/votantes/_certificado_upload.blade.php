@@ -28,6 +28,12 @@
         >
     </label>
 
+    @error('foto_certificado')
+        <p class="mt-2 max-w-[18rem] rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-xs font-medium leading-5 text-red-700 dark:border-red-500/30 dark:bg-red-500/10 dark:text-red-200">
+            {{ $message }}
+        </p>
+    @enderror
+
     <div
         x-cloak
         x-show="submitting"

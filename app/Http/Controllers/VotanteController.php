@@ -173,7 +173,12 @@ class VotanteController extends Controller
         $this->authorize('update', $votante);
 
         $data = $request->validate([
-            'foto_certificado' => ['required', 'image', 'max:5120'],
+            'foto_certificado' => ['required', 'file', 'mimetypes:image/jpeg,image/png,image/gif,image/webp,image/bmp,image/heic,image/heif', 'max:12288'],
+        ], [
+            'foto_certificado.required' => 'Debes seleccionar una imagen del certificado.',
+            'foto_certificado.file' => 'El archivo del certificado no es válido.',
+            'foto_certificado.mimetypes' => 'El certificado debe ser una imagen en formato JPG, PNG, GIF, WEBP, BMP, HEIC o HEIF.',
+            'foto_certificado.max' => 'La imagen supera el límite permitido de 12 MB.',
         ]);
 
         if ($votante->foto_certificado) {

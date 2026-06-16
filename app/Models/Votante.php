@@ -51,14 +51,16 @@ class Votante extends Model
             return null;
         }
 
-        $baseUrl = request()?->getBaseUrl();
+        $baseUrl = request()?->getBaseUrl() ?? '';
+        $baseUrl = preg_replace('#/index\.php$#', '', $baseUrl);
         $version = $this->updated_at?->timestamp ?? $this->created_at?->timestamp ?? time();
+        $storagePath = 'storage/' . ltrim($this->foto_certificado, '/');
 
-        if ($baseUrl !== null && $baseUrl !== '') {
-            return rtrim($baseUrl, '/') . '/storage/' . ltrim($this->foto_certificado, '/') . '?v=' . $version;
+        if ($baseUrl !== '') {
+            return rtrim($baseUrl, '/') . '/' . $storagePath . '?v=' . $version;
         }
 
-        return Storage::disk('public')->url($this->foto_certificado) . '?v=' . $version;
+        return asset($storagePath) . '?v=' . $version;
     }
 
     public function getEstadoRegistroAttribute(): string

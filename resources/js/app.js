@@ -252,6 +252,7 @@ Alpine.data('submissionFeedback', (config = {}) => ({
     selectedFilePreview: '',
     errorMessage: '',
     targetName: config.name ?? 'el registro',
+    maxFileSizeBytes: 12 * 1024 * 1024,
     _submissionTimers: [],
     get stageMessage() {
         if (this.submissionStage === 'error') {
@@ -277,7 +278,7 @@ Alpine.data('submissionFeedback', (config = {}) => ({
             return true;
         }
 
-        return /\.(png|jpe?g|gif|webp|bmp|svg)$/i.test(file.name ?? '');
+        return /\.(png|jpe?g|gif|webp|bmp|heic|heif)$/i.test(file.name ?? '');
     },
     async prepareUpload(event) {
         const file = event?.target?.files?.[0];
@@ -293,7 +294,24 @@ Alpine.data('submissionFeedback', (config = {}) => ({
         if (!this.isValidImageFile(file)) {
             this.submitting = true;
             this.submissionStage = 'error';
-            this.errorMessage = 'El archivo debe ser una imagen. Selecciona un PNG, JPG, GIF, WEBP o BMP.';
+            this.errorMessage = 'El archivo debe ser una imagen. Selecciona un PNG, JPG, GIF, WEBP, BMP, HEIC o HEIF.';
+
+            this._submissionTimers = [
+                setTimeout(() => {
+                    this.submitting = false;
+                    this.submissionStage = 'preparando';
+                    this.errorMessage = '';
+                    this.selectedFileName = '';
+                }, 4500),
+            ];
+
+            return;
+        }
+
+        if (file.size > this.maxFileSizeBytes) {
+            this.submitting = true;
+            this.submissionStage = 'error';
+            this.errorMessage = 'La imagen supera el límite permitido de 12 MB. Comprime la foto o usa una versión más ligera.';
 
             this._submissionTimers = [
                 setTimeout(() => {
@@ -312,7 +330,7 @@ Alpine.data('submissionFeedback', (config = {}) => ({
 
         if (file.type && file.type.startsWith('image/')) {
             try {
-                this.selectedFilePreview = await new Promise((resolve, reject) => {
+            this.selectedFilePreview = await new Promise((resolve, reject) => {
                     const reader = new FileReader();
                     reader.onload = () => resolve(String(reader.result ?? ''));
                     reader.onerror = () => reject(new Error('No se pudo leer la imagen.'));

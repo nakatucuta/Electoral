@@ -22,7 +22,7 @@ class StoreVotanteRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'foto_certificado' => ['nullable', 'image', 'max:5120'],
+            'foto_certificado' => ['nullable', 'file', 'mimetypes:image/jpeg,image/png,image/gif,image/webp,image/bmp,image/heic,image/heif', 'max:12288'],
             'nombres' => ['required', 'string', 'max:255'],
             'apellidos' => ['required', 'string', 'max:255'],
             'tipo_identificacion' => ['required', Rule::in(['cc', 'cd', 'ce', 'pasaporte'])],
@@ -31,7 +31,7 @@ class StoreVotanteRequest extends FormRequest
             'departamento' => ['required', 'string', 'max:255'],
             'municipio' => ['required', 'string', 'max:255'],
             'puesto_votacion' => ['required', 'string', 'max:255'],
-            'comuna' => ['required', 'string', 'max:255'],
+            'comuna' => ['nullable', 'string', 'max:255'],
             'direccion' => ['required', 'string', 'max:255'],
             'mesa_votacion' => ['required', 'string', 'max:40'],
         ];

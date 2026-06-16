@@ -176,7 +176,7 @@
                 <div class="relative" x-on:click.outside="closeSuggestions('comuna')">
                     <x-label for="comuna" value="Comuna" />
                     <div class="relative mt-1">
-                        <x-input id="comuna" name="comuna" type="text" class="block w-full pr-10" x-model="comuna" x-on:focus="abrirCatalogo('comuna')" x-on:click="abrirCatalogo('comuna')" x-on:input.debounce.300ms="buscarCatalogo('comuna')" autocomplete="off" required />
+                        <x-input id="comuna" name="comuna" type="text" class="block w-full pr-10" x-model="comuna" x-on:focus="abrirCatalogo('comuna')" x-on:click="abrirCatalogo('comuna')" x-on:input.debounce.300ms="buscarCatalogo('comuna')" autocomplete="off" />
                         <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400">
                             <svg viewBox="0 0 20 20" fill="none" class="h-4 w-4" aria-hidden="true">
                                 <path d="M6 8l4 4 4-4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />

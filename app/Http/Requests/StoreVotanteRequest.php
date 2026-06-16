@@ -22,7 +22,7 @@ class StoreVotanteRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'foto_certificado' => ['nullable', 'file', 'mimetypes:image/jpeg,image/png,image/gif,image/webp,image/bmp,image/heic,image/heif', 'max:12288'],
+            'foto_certificado' => ['nullable', 'file', 'mimetypes:image/jpeg,image/png,image/gif,image/webp,image/bmp,image/heic,image/heif', 'max:10240'],
             'nombres' => ['required', 'string', 'max:255'],
             'apellidos' => ['required', 'string', 'max:255'],
             'tipo_identificacion' => ['required', Rule::in(['cc', 'cd', 'ce', 'pasaporte'])],
@@ -34,6 +34,14 @@ class StoreVotanteRequest extends FormRequest
             'comuna' => ['nullable', 'string', 'max:255'],
             'direccion' => ['required', 'string', 'max:255'],
             'mesa_votacion' => ['required', 'string', 'max:40'],
+        ];
+    }
+
+    public function messages(): array
+    {
+        return [
+            'foto_certificado.mimetypes' => 'El certificado debe ser una imagen en formato JPG, PNG, GIF, WEBP, BMP, HEIC o HEIF. Si es una foto de cámara, vuelve a guardarla como imagen.',
+            'foto_certificado.max' => 'La imagen supera el límite permitido de 10 MB. Prueba bajar la resolución, guardarla en JPG o WEBP, o recortarla antes de subirla.',
         ];
     }
 

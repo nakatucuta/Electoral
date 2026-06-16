@@ -173,30 +173,6 @@
                     <x-input-error for="puesto_votacion" class="mt-2" />
                 </div>
 
-                <div class="relative" x-on:click.outside="closeSuggestions('comuna')">
-                    <x-label for="comuna" value="Comuna" />
-                    <div class="relative mt-1">
-                        <x-input id="comuna" name="comuna" type="text" class="block w-full pr-10" x-model="comuna" x-on:focus="abrirCatalogo('comuna')" x-on:click="abrirCatalogo('comuna')" x-on:input.debounce.300ms="buscarCatalogo('comuna')" autocomplete="off" />
-                        <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400">
-                            <svg viewBox="0 0 20 20" fill="none" class="h-4 w-4" aria-hidden="true">
-                                <path d="M6 8l4 4 4-4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
-                            </svg>
-                        </div>
-                    </div>
-                    <div x-show="suggestionsVisible.comuna" x-transition class="absolute z-20 mt-1 max-h-60 w-full overflow-auto rounded-xl border border-indigo-200 bg-white shadow-xl dark:border-gray-700 dark:bg-gray-900" style="display: none;">
-                        <template x-if="suggestionsLoading.comuna && !suggestions.comuna.length">
-                            <div class="px-4 py-3 text-sm text-gray-500">Cargando opciones...</div>
-                        </template>
-                        <template x-if="!suggestionsLoading.comuna && !suggestions.comuna.length">
-                            <div class="px-4 py-3 text-sm text-gray-500">Escribe para buscar o agrega un valor nuevo.</div>
-                        </template>
-                        <template x-for="item in suggestions.comuna" :key="item">
-                            <button type="button" class="block w-full border-b border-gray-100 px-4 py-3 text-left text-sm text-gray-700 transition hover:bg-indigo-50 dark:border-gray-800 dark:text-gray-200 dark:hover:bg-gray-800" x-text="item" x-on:click="selectValue('comuna', item)"></button>
-                        </template>
-                    </div>
-                    <x-input-error for="comuna" class="mt-2" />
-                </div>
-
                 <div class="relative md:col-span-2" x-on:click.outside="closeSuggestions('direccion')">
                     <x-label for="direccion" value="Dirección" />
                     <div class="relative mt-1">
@@ -222,7 +198,7 @@
                 </div>
 
                 <div>
-                    <x-label for="mesa_votacion" value="Mesa de votación" />
+                    <x-label for="mesa_votacion" value="Mesa de votación del votante" />
                     <x-input id="mesa_votacion" name="mesa_votacion" type="text" class="mt-1 block w-full" :value="old('mesa_votacion', $votante->mesa_votacion ?? '')" required />
                     <x-input-error for="mesa_votacion" class="mt-2" />
                 </div>

@@ -88,7 +88,7 @@
             <p
                 x-show="errorMessage"
                 x-text="errorMessage"
-                class="mx-auto mt-3 max-w-full rounded-xl border border-red-200 bg-red-100 px-4 py-3 text-center text-[13px] font-medium leading-5 break-words whitespace-normal text-red-700 dark:border-red-500/30 dark:bg-red-500/10 dark:text-red-200"
+                class="mx-auto mt-3 max-w-full rounded-xl border border-red-200 bg-red-100 px-4 py-3 text-center text-[13px] font-medium leading-5 break-words whitespace-pre-line text-red-700 dark:border-red-500/30 dark:bg-red-500/10 dark:text-red-200"
             ></p>
             <p x-show="!errorMessage" class="mt-2 whitespace-normal break-words text-sm leading-6 text-gray-500 text-balance dark:text-gray-400">
                 Vamos a dejar el certificado listo para que se refleje en el sistema.

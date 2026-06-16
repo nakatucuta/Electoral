@@ -57,7 +57,6 @@ Alpine.data('votanteForm', (config) => ({
     departamento: config.initial?.departamento ?? '',
     municipio: config.initial?.municipio ?? '',
     puesto_votacion: config.initial?.puesto_votacion ?? '',
-    comuna: config.initial?.comuna ?? '',
     direccion: config.initial?.direccion ?? '',
     submitting: false,
     submissionStage: 'preparando',
@@ -69,28 +68,24 @@ Alpine.data('votanteForm', (config) => ({
         departamento: [],
         municipio: [],
         puesto_votacion: [],
-        comuna: [],
         direccion: [],
     },
     suggestionsVisible: {
         departamento: false,
         municipio: false,
         puesto_votacion: false,
-        comuna: false,
         direccion: false,
     },
     suggestionsLoading: {
         departamento: false,
         municipio: false,
         puesto_votacion: false,
-        comuna: false,
         direccion: false,
     },
     catalogCache: {
         departamento: [],
         municipio: [],
         puesto_votacion: [],
-        comuna: [],
         direccion: [],
     },
     activeField: null,
@@ -149,7 +144,7 @@ Alpine.data('votanteForm', (config) => ({
             url.searchParams.set('departamento', this.departamento.trim());
         }
 
-        if (field === 'puesto_votacion' || field === 'comuna' || field === 'direccion') {
+        if (field === 'puesto_votacion' || field === 'direccion') {
             if (this.municipio.trim()) {
                 url.searchParams.set('municipio', this.municipio.trim());
             }
@@ -194,13 +189,11 @@ Alpine.data('votanteForm', (config) => ({
         if (field === 'departamento') {
             this.municipio = '';
             this.puesto_votacion = '';
-            this.comuna = '';
             this.direccion = '';
         }
 
         if (field === 'municipio') {
             this.puesto_votacion = '';
-            this.comuna = '';
             this.direccion = '';
         }
     },
@@ -238,7 +231,7 @@ Alpine.data('votanteForm', (config) => ({
             this.validarNumero();
         }
 
-        const fields = ['departamento', 'municipio', 'puesto_votacion', 'comuna', 'direccion'];
+        const fields = ['departamento', 'municipio', 'puesto_votacion', 'direccion'];
         fields.forEach((field) => {
             void this.buscarCatalogo(field, false);
         });
@@ -252,7 +245,7 @@ Alpine.data('submissionFeedback', (config = {}) => ({
     selectedFilePreview: '',
     errorMessage: '',
     targetName: config.name ?? 'el registro',
-    maxFileSizeBytes: 12 * 1024 * 1024,
+    maxFileSizeBytes: 10 * 1024 * 1024,
     _submissionTimers: [],
     clearSubmissionTimers() {
         (this._submissionTimers || []).forEach((timer) => clearTimeout(timer));
@@ -260,7 +253,7 @@ Alpine.data('submissionFeedback', (config = {}) => ({
     },
     get stageMessage() {
         if (this.submissionStage === 'error') {
-            return 'Archivo no válido';
+            return 'No se pudo subir la imagen';
         }
 
         if (this.submissionStage === 'validando') {
@@ -299,7 +292,7 @@ Alpine.data('submissionFeedback', (config = {}) => ({
         if (!this.isValidImageFile(file)) {
             this.submitting = true;
             this.submissionStage = 'error';
-            this.errorMessage = 'El archivo debe ser una imagen. Selecciona un PNG, JPG, GIF, WEBP, BMP, HEIC o HEIF.';
+            this.errorMessage = 'El archivo debe ser una imagen.\nSugerencias: usa un PNG, JPG, GIF, WEBP, BMP, HEIC o HEIF, o vuelve a exportarla como foto.';
 
             this._submissionTimers = [
                 setTimeout(() => {
@@ -316,7 +309,7 @@ Alpine.data('submissionFeedback', (config = {}) => ({
         if (file.size > this.maxFileSizeBytes) {
             this.submitting = true;
             this.submissionStage = 'error';
-            this.errorMessage = 'La imagen supera el límite permitido de 12 MB. Comprime la foto o usa una versión más ligera.';
+            this.errorMessage = 'La imagen supera el límite permitido de 10 MB.\nPrueba bajar la resolución de la cámara, guardarla en JPG o WEBP, o recortarla antes de subirla.';
 
             this._submissionTimers = [
                 setTimeout(() => {

@@ -8,20 +8,22 @@
             </div>
 
             <div class="flex flex-wrap items-center gap-3">
-                <a href="{{ route('votantes.export.excel', request()->query()) }}" class="inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-500">
-                    <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M12 5v10m0 0 4-4m-4 4-4-4" stroke-linecap="round" stroke-linejoin="round"></path>
-                        <path d="M5 19h14" stroke-linecap="round" stroke-linejoin="round"></path>
-                    </svg>
-                    Excel
-                </a>
-                <a href="{{ route('votantes.export.pdf', request()->query()) }}" class="inline-flex items-center justify-center gap-2 rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-800 dark:bg-slate-700 dark:hover:bg-slate-600">
-                    <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M7 3h7l5 5v13H7z" stroke-linecap="round" stroke-linejoin="round"></path>
-                        <path d="M14 3v6h6" stroke-linecap="round" stroke-linejoin="round"></path>
-                    </svg>
-                    PDF
-                </a>
+                @if (auth()->user()->isAdmin())
+                    <a href="{{ route('votantes.export.excel', request()->query()) }}" class="inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-500">
+                        <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M12 5v10m0 0 4-4m-4 4-4-4" stroke-linecap="round" stroke-linejoin="round"></path>
+                            <path d="M5 19h14" stroke-linecap="round" stroke-linejoin="round"></path>
+                        </svg>
+                        Excel
+                    </a>
+                    <a href="{{ route('votantes.export.pdf', request()->query()) }}" class="inline-flex items-center justify-center gap-2 rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-800 dark:bg-slate-700 dark:hover:bg-slate-600">
+                        <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M7 3h7l5 5v13H7z" stroke-linecap="round" stroke-linejoin="round"></path>
+                            <path d="M14 3v6h6" stroke-linecap="round" stroke-linejoin="round"></path>
+                        </svg>
+                        PDF
+                    </a>
+                @endif
                 <a href="{{ route('votantes.create') }}" class="inline-flex items-center justify-center rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-indigo-500">Nuevo votante</a>
             </div>
         </div>

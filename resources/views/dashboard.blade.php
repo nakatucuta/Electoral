@@ -338,7 +338,6 @@
                                     @if (auth()->user()->isAdmin())
                                         <th class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">Registrado por</th>
                                     @endif
-                                    <th class="px-6 py-3 text-right text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">Certificado</th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-gray-200 bg-white dark:divide-gray-700 dark:bg-gray-800">
@@ -376,13 +375,10 @@
                                                 <div class="text-xs text-gray-500 dark:text-gray-400">{{ $votante->user?->email }}</div>
                                             </td>
                                         @endif
-                                        <td class="whitespace-nowrap px-6 py-4 text-right">
-                                            @include('votantes._certificado_upload', ['votante' => $votante])
-                                        </td>
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="{{ auth()->user()->isAdmin() ? 6 : 5 }}" class="px-6 py-14 text-center text-sm text-gray-500 dark:text-gray-400">
+                                        <td colspan="{{ auth()->user()->isAdmin() ? 5 : 4 }}" class="px-6 py-14 text-center text-sm text-gray-500 dark:text-gray-400">
                                             Aun no hay votantes registrados.
                                         </td>
                                     </tr>

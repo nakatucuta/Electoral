@@ -254,6 +254,10 @@ Alpine.data('submissionFeedback', (config = {}) => ({
     targetName: config.name ?? 'el registro',
     maxFileSizeBytes: 12 * 1024 * 1024,
     _submissionTimers: [],
+    clearSubmissionTimers() {
+        (this._submissionTimers || []).forEach((timer) => clearTimeout(timer));
+        this._submissionTimers = [];
+    },
     get stageMessage() {
         if (this.submissionStage === 'error') {
             return 'Archivo no válido';
@@ -287,6 +291,7 @@ Alpine.data('submissionFeedback', (config = {}) => ({
             return;
         }
 
+        this.clearSubmissionTimers();
         this.selectedFileName = file.name;
         this.selectedFilePreview = '';
         this.errorMessage = '';
@@ -358,6 +363,7 @@ Alpine.data('submissionFeedback', (config = {}) => ({
             return;
         }
 
+        this.clearSubmissionTimers();
         const form = event?.target;
         this.submitting = true;
         this.submissionStage = 'preparando';

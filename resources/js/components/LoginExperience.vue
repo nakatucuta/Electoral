@@ -226,9 +226,9 @@ const activeStep = ref(1);
 let stepTimer = null;
 
 const metrics = [
-    { value: '360', label: 'Empleados base' },
-    { value: '24/7', label: 'Seguimiento' },
-    { value: '100%', label: 'Control' },
+    { value: 'Seguro', label: 'Acceso protegido' },
+    { value: 'Rápido', label: 'Ingreso directo' },
+    { value: 'Claro', label: 'Interfaz simple' },
 ];
 
 const firstError = (field) => {

@@ -117,16 +117,16 @@
 
                     <div class="mt-10 grid max-w-2xl grid-cols-3 gap-3">
                         <div class="login-float rounded-2xl border border-white/12 bg-white/10 p-4 backdrop-blur">
-                            <p class="text-3xl font-black">360</p>
-                            <p class="mt-2 text-xs font-medium uppercase text-white/55">Empleados base</p>
+                            <p class="text-3xl font-black">Seguro</p>
+                            <p class="mt-2 text-xs font-medium uppercase text-white/55">Acceso protegido</p>
                         </div>
                         <div class="login-float rounded-2xl border border-white/12 bg-white/10 p-4 backdrop-blur [animation-delay:180ms]">
-                            <p class="text-3xl font-black">24/7</p>
-                            <p class="mt-2 text-xs font-medium uppercase text-white/55">Seguimiento</p>
+                            <p class="text-3xl font-black">Rápido</p>
+                            <p class="mt-2 text-xs font-medium uppercase text-white/55">Ingreso directo</p>
                         </div>
                         <div class="login-float rounded-2xl border border-white/12 bg-white/10 p-4 backdrop-blur [animation-delay:360ms]">
-                            <p class="text-3xl font-black">100%</p>
-                            <p class="mt-2 text-xs font-medium uppercase text-white/55">Control</p>
+                            <p class="text-3xl font-black">Claro</p>
+                            <p class="mt-2 text-xs font-medium uppercase text-white/55">Interfaz simple</p>
                         </div>
                     </div>
                 </div>

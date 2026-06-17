@@ -152,63 +152,80 @@
                     </div>
                 </section>
 
-                <section class="rounded-3xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-gray-800">
-                    <div class="flex items-center justify-between gap-4">
-                        <div>
-                            <h3 class="text-base font-semibold text-gray-900 dark:text-gray-100">Estado por responsables</h3>
-                            <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Cada tarjeta muestra total gestionado, confirmados y pendientes.</p>
-                        </div>
-                        @if ($pendingNotificationsTotal > 0)
-                            <div class="rounded-full bg-amber-100 px-4 py-2 text-sm font-semibold text-amber-800 dark:bg-amber-500/10 dark:text-amber-200">
-                                {{ number_format($pendingNotificationsTotal) }} alertas activas
+                <section class="rounded-3xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-gray-800" x-data="{ open: false }">
+                    <div class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+                        <div class="min-w-0">
+                            <div class="flex flex-wrap items-center gap-3">
+                                <h3 class="text-base font-semibold text-gray-900 dark:text-gray-100">Estado por responsables</h3>
+                                <span class="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700 dark:bg-slate-700 dark:text-slate-100">
+                                    {{ number_format($employeeStats->count()) }} responsables
+                                </span>
+                                @if ($pendingNotificationsTotal > 0)
+                                    <span class="rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-800 dark:bg-amber-500/10 dark:text-amber-200">
+                                        {{ number_format($pendingNotificationsTotal) }} alertas activas
+                                    </span>
+                                @endif
                             </div>
-                        @endif
+                            <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Vista compacta por defecto para que puedas revisar rápido y desplegar solo cuando lo necesites.</p>
+                        </div>
+
+                        <button
+                            type="button"
+                            class="inline-flex items-center gap-2 rounded-xl border border-indigo-200 bg-indigo-50 px-4 py-2.5 text-sm font-semibold text-indigo-700 transition hover:bg-indigo-100 dark:border-indigo-900/50 dark:bg-indigo-500/10 dark:text-indigo-200"
+                            @click="open = !open"
+                        >
+                            <svg class="h-4 w-4 transition duration-200" :class="open ? 'rotate-180' : ''" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M6 9l6 6 6-6" stroke-linecap="round" stroke-linejoin="round"></path>
+                            </svg>
+                            <span x-text="open ? 'Ocultar responsables' : 'Mostrar responsables'"></span>
+                        </button>
                     </div>
 
-                    <div class="mt-5 grid gap-4 xl:grid-cols-2">
-                        @forelse ($employeeStats as $employee)
-                            <button
-                                type="button"
-                                class="rounded-3xl border border-gray-200 bg-white p-5 text-left shadow-sm transition hover:-translate-y-0.5 hover:border-indigo-300 hover:shadow-md dark:border-gray-700 dark:bg-gray-900 dark:hover:border-indigo-500/40"
-                                @click="openDetalle({ id: {{ $employee->id }}, name: @js($employee->name), email: @js($employee->email), sede: @js($employee->sede), role: @js($employee->role), pendientes: {{ $employee->votantes_pendientes_count }}, confirmados: {{ $employee->votantes_confirmados_count }}, total: {{ $employee->votantes_total_gestionados }} })"
-                            >
-                                <div class="flex items-start justify-between gap-4">
-                                    <div class="min-w-0">
-                                        <p class="truncate text-lg font-semibold text-gray-900 dark:text-gray-100">{{ $employee->name }}</p>
-                                        <p class="mt-1 break-all text-sm text-gray-500 dark:text-gray-400">{{ $employee->email }}</p>
-                                        <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">{{ $employee->sede ?? 'Sin sede' }}</p>
+                    <div x-show="open" x-transition.opacity x-cloak class="mt-5">
+                        <div class="grid gap-4 xl:grid-cols-2">
+                            @forelse ($employeeStats as $employee)
+                                <button
+                                    type="button"
+                                    class="rounded-3xl border border-gray-200 bg-white p-5 text-left shadow-sm transition hover:-translate-y-0.5 hover:border-indigo-300 hover:shadow-md dark:border-gray-700 dark:bg-gray-900 dark:hover:border-indigo-500/40"
+                                    @click="openDetalle({ id: {{ $employee->id }}, name: @js($employee->name), email: @js($employee->email), sede: @js($employee->sede), role: @js($employee->role), pendientes: {{ $employee->votantes_pendientes_count }}, confirmados: {{ $employee->votantes_confirmados_count }}, total: {{ $employee->votantes_total_gestionados }} })"
+                                >
+                                    <div class="flex items-start justify-between gap-4">
+                                        <div class="min-w-0">
+                                            <p class="truncate text-lg font-semibold text-gray-900 dark:text-gray-100">{{ $employee->name }}</p>
+                                            <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">{{ $employee->role === 'admin' ? 'Administrador' : 'Empleado' }}</p>
+                                        </div>
+                                        <span class="shrink-0 rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-amber-700 dark:bg-amber-500/10 dark:text-amber-200">
+                                            {{ $employee->votantes_pendientes_count }} pendientes
+                                        </span>
                                     </div>
-                                    <span class="shrink-0 rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-amber-700 dark:bg-amber-500/10 dark:text-amber-200">
-                                        {{ $employee->votantes_pendientes_count }} pendientes
-                                    </span>
-                                </div>
 
-                                <div class="mt-4 grid gap-3 sm:grid-cols-3">
-                                    <div class="rounded-2xl bg-slate-50 px-4 py-3 dark:bg-gray-800">
-                                        <p class="text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Total</p>
-                                        <p class="mt-1 text-2xl font-black text-slate-950 dark:text-slate-50">{{ number_format($employee->votantes_total_gestionados) }}</p>
+                                    <div class="mt-4 grid gap-3 sm:grid-cols-3">
+                                        <div class="rounded-2xl bg-slate-50 px-4 py-3 dark:bg-gray-800">
+                                            <p class="text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Total</p>
+                                            <p class="mt-1 text-2xl font-black text-slate-950 dark:text-slate-50">{{ number_format($employee->votantes_total_gestionados) }}</p>
+                                        </div>
+                                        <div class="rounded-2xl bg-emerald-50 px-4 py-3 dark:bg-emerald-500/10">
+                                            <p class="text-[11px] font-semibold uppercase tracking-wide text-emerald-700 dark:text-emerald-300">Confirmados</p>
+                                            <p class="mt-1 text-2xl font-black text-emerald-950 dark:text-emerald-50">{{ number_format($employee->votantes_confirmados_count) }}</p>
+                                        </div>
+                                        <div class="rounded-2xl bg-amber-50 px-4 py-3 dark:bg-amber-500/10">
+                                            <p class="text-[11px] font-semibold uppercase tracking-wide text-amber-700 dark:text-amber-300">Pendientes</p>
+                                            <p class="mt-1 text-2xl font-black text-amber-950 dark:text-amber-50">{{ number_format($employee->votantes_pendientes_count) }}</p>
+                                        </div>
                                     </div>
-                                    <div class="rounded-2xl bg-emerald-50 px-4 py-3 dark:bg-emerald-500/10">
-                                        <p class="text-[11px] font-semibold uppercase tracking-wide text-emerald-700 dark:text-emerald-300">Confirmados</p>
-                                        <p class="mt-1 text-2xl font-black text-emerald-950 dark:text-emerald-50">{{ number_format($employee->votantes_confirmados_count) }}</p>
-                                    </div>
-                                    <div class="rounded-2xl bg-amber-50 px-4 py-3 dark:bg-amber-500/10">
-                                        <p class="text-[11px] font-semibold uppercase tracking-wide text-amber-700 dark:text-amber-300">Pendientes</p>
-                                        <p class="mt-1 text-2xl font-black text-amber-950 dark:text-amber-50">{{ number_format($employee->votantes_pendientes_count) }}</p>
-                                    </div>
-                                </div>
 
-                                @php($employeeTotal = max(1, $employee->votantes_confirmados_count + $employee->votantes_pendientes_count))
-                                <div class="mt-4 h-3 overflow-hidden rounded-full bg-gray-100 dark:bg-gray-700">
-                                    <div class="h-full rounded-full bg-gradient-to-r from-emerald-500 to-indigo-600" style="width: {{ max(8, round(($employee->votantes_confirmados_count / $employeeTotal) * 100)) }}%;"></div>
+                                    @php($employeeTotal = max(1, $employee->votantes_confirmados_count + $employee->votantes_pendientes_count))
+                                    <div class="mt-4 h-3 overflow-hidden rounded-full bg-gray-100 dark:bg-gray-700">
+                                        <div class="h-full rounded-full bg-gradient-to-r from-emerald-500 to-indigo-600" style="width: {{ max(8, round(($employee->votantes_confirmados_count / $employeeTotal) * 100)) }}%;"></div>
+                                    </div>
+                                    <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">Haz clic para ver el detalle con pendientes y confirmados.</p>
+                                </button>
+                            @empty
+                                <div class="rounded-2xl border border-dashed border-gray-300 bg-gray-50 p-4 text-sm text-gray-500 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300">
+                                    No hay responsables registrados todavia.
                                 </div>
-                                <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">Haz clic para ver el detalle con pendientes y confirmados.</p>
-                            </button>
-                        @empty
-                            <div class="rounded-2xl border border-dashed border-gray-300 bg-gray-50 p-4 text-sm text-gray-500 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300">
-                                No hay responsables registrados todavia.
-                            </div>
-                        @endforelse
+                            @endforelse
+                        </div>
                     </div>
                 </section>
 

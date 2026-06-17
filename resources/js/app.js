@@ -377,15 +377,23 @@ Alpine.data('submissionFeedback', (config = {}) => ({
 Alpine.data('dashboardStats', (config) => ({
     activeTab: config.initialTab ?? 'resumen',
     charts: [],
+    renderTimer: null,
     init() {
-        const render = () => this.renderCharts();
+        const scheduleRender = () => {
+            if (this.renderTimer) {
+                clearTimeout(this.renderTimer);
+            }
 
-        this.$nextTick(() => {
-            render();
-            setTimeout(render, 0);
-        });
+            this.renderTimer = setTimeout(() => {
+                requestAnimationFrame(() => {
+                    requestAnimationFrame(() => this.renderCharts());
+                });
+            }, 50);
+        };
 
-        window.addEventListener('load', render, { once: true });
+        this.$nextTick(scheduleRender);
+        window.addEventListener('load', scheduleRender, { once: true });
+        window.addEventListener('resize', scheduleRender, { passive: true });
     },
     renderCharts() {
         this.destroyCharts();
@@ -398,8 +406,42 @@ Alpine.data('dashboardStats', (config) => ({
         const municipalityCanvas = this.$refs.municipalityChart || document.getElementById('municipalityChart');
         const trendCanvas = this.$refs.trendChart || document.getElementById('trendChart');
 
+        const normalizeCanvas = (canvas) => {
+            if (!canvas) {
+                return null;
+            }
+
+            canvas.style.display = 'block';
+            canvas.style.width = '100%';
+            canvas.style.height = '100%';
+
+            const parent = canvas.parentElement;
+            if (parent) {
+                parent.style.position = 'relative';
+                if (!parent.style.minHeight) {
+                    parent.style.minHeight = '20rem';
+                }
+            }
+
+            return canvas;
+        };
+
+        const createChart = (canvas, chartConfig) => {
+            const target = normalizeCanvas(canvas);
+
+            if (!target) {
+                return null;
+            }
+
+            const chart = new Chart(target, chartConfig);
+            chart.resize();
+            chart.update();
+
+            return chart;
+        };
+
         if (departmentCanvas && config.topDepartamentos?.length) {
-            this.charts.push(new Chart(departmentCanvas, {
+            const chart = createChart(departmentCanvas, {
                 type: 'doughnut',
                 data: {
                     labels: config.topDepartamentos.map((item) => item.label),
@@ -424,11 +466,15 @@ Alpine.data('dashboardStats', (config) => ({
                     },
                     cutout: '68%',
                 },
-            }));
+            });
+
+            if (chart) {
+                this.charts.push(chart);
+            }
         }
 
         if (municipalityCanvas && config.topMunicipios?.length) {
-            this.charts.push(new Chart(municipalityCanvas, {
+            const chart = createChart(municipalityCanvas, {
                 type: 'bar',
                 data: {
                     labels: config.topMunicipios.map((item) => item.label),
@@ -456,11 +502,15 @@ Alpine.data('dashboardStats', (config) => ({
                         },
                     },
                 },
-            }));
+            });
+
+            if (chart) {
+                this.charts.push(chart);
+            }
         }
 
         if (trendCanvas && config.dailyTrend?.length) {
-            this.charts.push(new Chart(trendCanvas, {
+            const chart = createChart(trendCanvas, {
                 type: 'line',
                 data: {
                     labels: config.dailyTrend.map((item) => item.label),
@@ -493,7 +543,11 @@ Alpine.data('dashboardStats', (config) => ({
                         },
                     },
                 },
-            }));
+            });
+
+            if (chart) {
+                this.charts.push(chart);
+            }
         }
     },
     destroyCharts() {
@@ -515,6 +569,12 @@ Alpine.data('novedadesPanel', (config) => ({
     responsables: [],
     selected: null,
     detalle: [],
+    confirmados: [],
+    summary: {
+        total: 0,
+        confirmados: 0,
+        pendientes: 0,
+    },
     meta: {
         total: 0,
         per_page: 10,
@@ -531,7 +591,13 @@ Alpine.data('novedadesPanel', (config) => ({
         this.loading = false;
         this.error = '';
         this.detalle = [];
+        this.confirmados = [];
         this.selected = null;
+        this.summary = {
+            total: 0,
+            confirmados: 0,
+            pendientes: 0,
+        };
         this.meta = {
             total: 0,
             per_page: 10,
@@ -564,6 +630,8 @@ Alpine.data('novedadesPanel', (config) => ({
             const data = await response.json();
             this.selected = data.responsable ?? this.selected;
             this.detalle = Array.isArray(data.items) ? data.items : [];
+            this.confirmados = Array.isArray(data.confirmed_items) ? data.confirmed_items : [];
+            this.summary = data.summary ?? this.summary;
             this.meta = data.meta ?? this.meta;
         } catch (error) {
             this.error = 'No se pudo cargar el detalle de pendientes.';

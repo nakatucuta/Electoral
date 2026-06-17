@@ -28,6 +28,8 @@
             <script src="https://cdn.tailwindcss.com"></script>
         @endif
 
+        @stack('styles')
+
         <!-- Styles -->
         @livewireStyles
     </head>
@@ -53,6 +55,7 @@
         </div>
 
         @stack('modals')
+        @stack('scripts')
 
         @livewireScripts
     </body>
